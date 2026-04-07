@@ -1,5 +1,6 @@
 use http::HeaderMap;
 
+use crate::config::Config;
 use crate::error::TusError;
 use crate::proto::{HDR_TUS_RESUMABLE, TUS_VERSION};
 
@@ -53,9 +54,42 @@ pub fn has_defer_length(headers: &HeaderMap) -> bool {
         .unwrap_or(false)
 }
 
-/// Build a header value from a `u64`.
+/// Build a header value from a `u64` (decimal digits are valid HTTP header bytes).
 pub fn u64_header(n: u64) -> http::HeaderValue {
-    http::HeaderValue::from_str(&n.to_string()).expect("u64 is always a valid header value")
+    let s = n.to_string();
+    http::HeaderValue::try_from(s.as_str()).unwrap_or_else(|_| http::HeaderValue::from_static("0"))
+}
+
+/// Absolute origin for `Location` (scheme + host, no path) when `base_url` is unset.
+pub(crate) fn request_base_url(config: &Config, headers: &HeaderMap) -> String {
+    if let Some(ref base) = config.base_url {
+        return base.trim_end_matches('/').to_string();
+    }
+    let scheme = if config.trust_forwarded_headers {
+        headers
+            .get("x-forwarded-proto")
+            .and_then(|v| v.to_str().ok())
+            .and_then(|s| s.split(',').next().map(str::trim))
+            .filter(|s| !s.is_empty())
+            .unwrap_or("http")
+    } else {
+        "http"
+    };
+    let host = if config.trust_forwarded_headers {
+        headers
+            .get("x-forwarded-host")
+            .or_else(|| headers.get("host"))
+            .and_then(|v| v.to_str().ok())
+            .map(|s| s.split(',').next().unwrap_or(s).trim())
+            .filter(|s| !s.is_empty())
+            .unwrap_or("localhost")
+    } else {
+        headers
+            .get("host")
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("localhost")
+    };
+    format!("{scheme}://{host}")
 }
 
 /// Build a header value from a static string.

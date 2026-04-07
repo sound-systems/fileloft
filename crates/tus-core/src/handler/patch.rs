@@ -6,9 +6,12 @@ use crate::{
     error::TusError,
     handler::{TusRequest, TusResponse},
     hooks::HookEvent,
-    lock::Locker,
-    proto::{CONTENT_TYPE_OCTET_STREAM, HDR_CONTENT_TYPE, HDR_UPLOAD_EXPIRES, HDR_UPLOAD_OFFSET},
-    store::{DataStore, Upload as _},
+    lock::SendLocker,
+    proto::{
+        CONTENT_TYPE_OCTET_STREAM, HDR_CONTENT_TYPE, HDR_UPLOAD_CHECKSUM, HDR_UPLOAD_EXPIRES,
+        HDR_UPLOAD_OFFSET,
+    },
+    store::{SendDataStore, SendUpload as _},
     util::{check_tus_resumable, parse_upload_length, parse_upload_offset, u64_header},
 };
 
@@ -19,8 +22,8 @@ pub(super) async fn handle<S, L>(
     req: TusRequest,
 ) -> Result<TusResponse, TusError>
 where
-    S: DataStore + Send + Sync + 'static,
-    L: Locker + Send + Sync + 'static,
+    S: SendDataStore + Send + Sync + 'static,
+    L: SendLocker + Send + Sync + 'static,
 {
     check_tus_resumable(&req.headers)?;
 
@@ -86,13 +89,19 @@ where
         }
     }
 
-    // Parse optional checksum header
-    let checksum = req
-        .headers
-        .get(crate::proto::HDR_UPLOAD_CHECKSUM)
-        .and_then(|v| v.to_str().ok())
-        .map(parse_checksum_header)
-        .transpose()?;
+    // Parse optional checksum header (only when checksum extension is enabled)
+    let checksum = if req.headers.contains_key(HDR_UPLOAD_CHECKSUM) {
+        if !h.config.extensions.checksum {
+            return Err(TusError::ExtensionNotEnabled("checksum"));
+        }
+        req.headers
+            .get(HDR_UPLOAD_CHECKSUM)
+            .and_then(|v| v.to_str().ok())
+            .map(parse_checksum_header)
+            .transpose()?
+    } else {
+        None
+    };
 
     let body = req
         .body

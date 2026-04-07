@@ -5,13 +5,13 @@ use crate::{
     handler::{TusRequest, TusResponse},
     hooks::HookEvent,
     info::{UploadId, UploadInfo},
-    lock::Locker,
+    lock::SendLocker,
     proto::{
         HDR_CONTENT_TYPE, HDR_LOCATION, HDR_UPLOAD_CONCAT, HDR_UPLOAD_EXPIRES,
         HDR_UPLOAD_LENGTH, HDR_UPLOAD_METADATA, HDR_UPLOAD_OFFSET,
     },
-    store::{DataStore, Upload as _},
-    util::{has_defer_length, parse_upload_length, u64_header},
+    store::{SendDataStore, SendUpload as _},
+    util::{has_defer_length, parse_upload_length, request_base_url, u64_header},
 };
 
 use super::TusHandler;
@@ -21,8 +21,8 @@ pub(super) async fn handle<S, L>(
     mut req: TusRequest,
 ) -> Result<TusResponse, TusError>
 where
-    S: DataStore + Send + Sync + 'static,
-    L: Locker + Send + Sync + 'static,
+    S: SendDataStore + Send + Sync + 'static,
+    L: SendLocker + Send + Sync + 'static,
 {
     crate::util::check_tus_resumable(&req.headers)?;
 
@@ -138,7 +138,27 @@ where
         }
     }
 
-    let final_info = upload.get_info().await?;
+    let mut final_info = upload.get_info().await?;
+
+    if let Some(declared) = final_info.size {
+        if bytes_written > declared {
+            return Err(TusError::ExceedsUploadLength {
+                declared,
+                end: bytes_written,
+            });
+        }
+    }
+
+    if is_final
+        && h.config.extensions.concatenation
+        && h.config.extensions.cleanup_concat_partials
+    {
+        for partial_id in &final_info.partial_uploads {
+            let u = h.store.get_upload(partial_id).await?;
+            u.delete().await?;
+        }
+        final_info = upload.get_info().await?;
+    }
 
     // Fire UploadCreated event
     h.emit(HookEvent::UploadCreated {
@@ -165,7 +185,7 @@ where
             .parse()
             .map_err(|_| TusError::Internal("bad location".into()))?,
     );
-    headers.insert(HDR_UPLOAD_OFFSET, u64_header(bytes_written));
+    headers.insert(HDR_UPLOAD_OFFSET, u64_header(final_info.offset));
 
     if let Some(size) = final_info.size {
         headers.insert(HDR_UPLOAD_LENGTH, u64_header(size));
@@ -186,18 +206,10 @@ where
 
 fn build_location<S, L>(h: &TusHandler<S, L>, id: &UploadId, req: &TusRequest) -> String
 where
-    S: DataStore + Send + Sync + 'static,
-    L: Locker + Send + Sync + 'static,
+    S: SendDataStore + Send + Sync + 'static,
+    L: SendLocker + Send + Sync + 'static,
 {
-    let base = h.config.base_url.clone().unwrap_or_else(|| {
-        let scheme = "http";
-        let host = req
-            .headers
-            .get("host")
-            .and_then(|v| v.to_str().ok())
-            .unwrap_or("localhost");
-        format!("{scheme}://{host}")
-    });
+    let base = request_base_url(&h.config, &req.headers);
     let path = h.config.base_path.trim_end_matches('/');
     format!("{base}{path}/{id}")
 }
@@ -234,8 +246,8 @@ async fn fetch_partial_infos<S, L>(
     ids: &[UploadId],
 ) -> Result<Vec<UploadInfo>, TusError>
 where
-    S: DataStore + Send + Sync + 'static,
-    L: Locker + Send + Sync + 'static,
+    S: SendDataStore + Send + Sync + 'static,
+    L: SendLocker + Send + Sync + 'static,
 {
     let mut infos = Vec::with_capacity(ids.len());
     for id in ids {

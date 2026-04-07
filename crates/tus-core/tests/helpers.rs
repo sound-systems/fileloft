@@ -1,3 +1,5 @@
+#![allow(dead_code)] // helpers are shared across test crates; not every file uses every helper
+
 /// Shared test helpers used across integration test files.
 use std::sync::Arc;
 

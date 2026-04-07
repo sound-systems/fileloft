@@ -5,8 +5,8 @@ use crate::{
     error::TusError,
     handler::{TusRequest, TusResponse},
     hooks::HookEvent,
-    lock::Locker,
-    store::{DataStore, Upload as _},
+    lock::SendLocker,
+    store::{SendDataStore, SendUpload as _},
 };
 
 use super::TusHandler;
@@ -16,8 +16,8 @@ pub(super) async fn handle<S, L>(
     req: &TusRequest,
 ) -> Result<TusResponse, TusError>
 where
-    S: DataStore + Send + Sync + 'static,
-    L: Locker + Send + Sync + 'static,
+    S: SendDataStore + Send + Sync + 'static,
+    L: SendLocker + Send + Sync + 'static,
 {
     crate::util::check_tus_resumable(&req.headers)?;
 

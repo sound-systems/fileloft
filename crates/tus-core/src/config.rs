@@ -26,6 +26,8 @@ pub struct Extensions {
     pub termination: bool,
     /// Allow parallel partial uploads assembled into a final upload.
     pub concatenation: bool,
+    /// After a successful `final` concatenation, delete partial upload resources.
+    pub cleanup_concat_partials: bool,
 }
 
 impl Default for Extensions {
@@ -40,6 +42,7 @@ impl Default for Extensions {
             checksum_trailer: false,
             termination: true,
             concatenation: false,
+            cleanup_concat_partials: false,
         }
     }
 }
@@ -61,6 +64,9 @@ pub struct Config {
     pub lock_timeout: Duration,
     /// Add permissive CORS headers to every response.
     pub enable_cors: bool,
+    /// When `base_url` is unset, trust `X-Forwarded-Proto` / `X-Forwarded-Host` for `Location`.
+    /// Enable only behind a trusted reverse proxy.
+    pub trust_forwarded_headers: bool,
     /// Hook callbacks and event-channel configuration.
     pub hooks: HookConfig,
 }
@@ -74,6 +80,7 @@ impl Default for Config {
             extensions: Extensions::default(),
             lock_timeout: Duration::from_secs(20),
             enable_cors: false,
+            trust_forwarded_headers: false,
             hooks: HookConfig::default(),
         }
     }

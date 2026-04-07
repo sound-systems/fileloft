@@ -6,7 +6,7 @@ use tokio::sync::Mutex;
 use tus_core::{
     error::TusError,
     info::UploadId,
-    lock::{Lock, Locker},
+    lock::{SendLock, SendLocker},
 };
 
 type HeldSet = Arc<Mutex<HashSet<String>>>;
@@ -42,7 +42,7 @@ impl Default for MemoryLocker {
     }
 }
 
-impl Locker for MemoryLocker {
+impl SendLocker for MemoryLocker {
     type LockType = MemoryLock;
 
     async fn acquire(&self, id: &UploadId) -> Result<MemoryLock, TusError> {
@@ -74,7 +74,7 @@ pub struct MemoryLock {
     released: bool,
 }
 
-impl Lock for MemoryLock {
+impl SendLock for MemoryLock {
     async fn release(mut self) -> Result<(), TusError> {
         self.held.lock().await.remove(&self.id);
         self.released = true;

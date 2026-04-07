@@ -7,7 +7,7 @@ use tokio::sync::RwLock;
 use tus_core::{
     error::TusError,
     info::{UploadId, UploadInfo},
-    store::{DataStore, Upload},
+    store::{SendDataStore, SendUpload},
 };
 
 #[derive(Debug)]
@@ -42,7 +42,7 @@ impl Default for MemoryStore {
     }
 }
 
-impl DataStore for MemoryStore {
+impl SendDataStore for MemoryStore {
     type UploadType = MemoryUpload;
 
     async fn create_upload(&self, info: UploadInfo) -> Result<MemoryUpload, TusError> {
@@ -80,7 +80,7 @@ pub struct MemoryUpload {
     store: StoreMap,
 }
 
-impl Upload for MemoryUpload {
+impl SendUpload for MemoryUpload {
     async fn write_chunk(
         &mut self,
         offset: u64,
@@ -94,6 +94,18 @@ impl Upload for MemoryUpload {
         let entry = state
             .get_mut(self.id.as_str())
             .ok_or_else(|| TusError::NotFound(self.id.to_string()))?;
+
+        let end_offset = offset.checked_add(n).ok_or_else(|| {
+            TusError::Internal("upload offset overflow".into())
+        })?;
+        if let Some(declared) = entry.info.size {
+            if end_offset > declared {
+                return Err(TusError::ExceedsUploadLength {
+                    declared,
+                    end: end_offset,
+                });
+            }
+        }
 
         // Ensure the buffer is large enough
         let end = (offset + n) as usize;

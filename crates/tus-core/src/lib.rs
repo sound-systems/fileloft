@@ -14,5 +14,5 @@ pub use error::TusError;
 pub use handler::{TusHandler, TusRequest, TusResponse};
 pub use hooks::{HookEvent, HookSender};
 pub use info::{Metadata, UploadId, UploadInfo};
-pub use lock::{Lock, Locker};
-pub use store::{DataStore, Upload};
+pub use lock::{Lock, Locker, SendLock, SendLocker};
+pub use store::{DataStore, SendDataStore, SendUpload, Upload};

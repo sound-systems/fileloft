@@ -9,6 +9,7 @@ rust-version.workspace = true
 [dependencies]
 tus-core.workspace   = true
 actix-web.workspace  = true
+http.workspace       = true
 tokio.workspace      = true
 tokio-util.workspace = true
 bytes.workspace      = true

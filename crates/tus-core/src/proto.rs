@@ -40,3 +40,6 @@ pub const EXT_TERMINATION: &str = "termination";
 pub const EXT_CONCATENATION: &str = "concatenation";
 
 pub const SUPPORTED_CHECKSUM_ALGORITHMS: &[&str] = &["sha1", "sha256", "md5"];
+
+/// When `false`, `checksum-trailer` is not advertised until implemented end-to-end.
+pub const CHECKSUM_TRAILER_IMPLEMENTED: bool = false;

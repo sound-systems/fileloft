@@ -2318,6 +2318,7 @@ dependencies = [
  "actix-web",
  "bytes",
  "futures-util",
+ "http 1.4.0",
  "tokio",
  "tokio-util",
  "tus-core",
@@ -2368,6 +2369,7 @@ name = "tus-rocket"
 version = "0.1.0"
 dependencies = [
  "bytes",
+ "http 1.4.0",
  "rocket",
  "tokio",
  "tus-core",
@@ -2380,6 +2382,7 @@ version = "0.1.0"
 dependencies = [
  "bytes",
  "fs4",
+ "serde",
  "serde_json",
  "tempfile",
  "tokio",

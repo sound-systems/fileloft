@@ -14,9 +14,9 @@ use crate::{
     config::Config,
     error::TusError,
     hooks::{HookEvent, HookSender},
-    lock::Locker,
+    lock::SendLocker,
     proto::{HDR_CACHE_CONTROL, HDR_TUS_RESUMABLE, TUS_VERSION},
-    store::DataStore,
+    store::SendDataStore,
     util::static_header,
 };
 
@@ -30,7 +30,7 @@ pub struct TusRequest {
     pub upload_id: Option<String>,
     pub headers: HeaderMap,
     /// Streaming body. `None` for HEAD / DELETE / OPTIONS.
-    pub body: Option<Box<dyn tokio::io::AsyncRead + Send + Unpin>>,
+    pub body: Option<Box<dyn tokio::io::AsyncRead + Send + Sync + Unpin>>,
 }
 
 /// Outgoing response produced by the tus handler.
@@ -47,8 +47,8 @@ pub struct TusResponse {
 /// Wrap in `Arc<TusHandler<S, L>>` and share across request-handling tasks.
 ///
 /// # Type Parameters
-/// - `S`: Storage backend implementing [`DataStore`].
-/// - `L`: Optional locker implementing [`Locker`]. Use `NoLocker` if concurrency
+/// - `S`: Storage backend implementing [`SendDataStore`].
+/// - `L`: Optional locker implementing [`SendLocker`]. Use `NoLocker` if concurrency
 ///   control is handled by the store itself or is not needed.
 pub struct TusHandler<S, L = NoLocker> {
     pub(crate) store: S,
@@ -59,8 +59,8 @@ pub struct TusHandler<S, L = NoLocker> {
 
 impl<S, L> TusHandler<S, L>
 where
-    S: DataStore + Send + Sync + 'static,
-    L: Locker + Send + Sync + 'static,
+    S: SendDataStore + Send + Sync + 'static,
+    L: SendLocker + Send + Sync + 'static,
 {
     pub fn new(store: S, locker: Option<L>, config: Config) -> Self {
         let hook_tx = if config.hooks.channel_capacity > 0 {
@@ -136,7 +136,8 @@ where
                 crate::proto::HDR_ACCESS_CONTROL_EXPOSE_HEADERS,
                 static_header(
                     "Upload-Offset,Upload-Length,Upload-Metadata,Upload-Expires,\
-                     Location,Tus-Resumable,Tus-Version,Tus-Extension,Tus-Max-Size",
+                     Upload-Defer-Length,Location,Tus-Resumable,Tus-Version,Tus-Extension,\
+                     Tus-Max-Size,Tus-Checksum-Algorithm",
                 ),
             );
         }
@@ -154,13 +155,13 @@ where
 /// A no-op locker used when the caller passes `None` for the locker type.
 pub struct NoLocker;
 
-impl crate::lock::Lock for NoLocker {
+impl crate::lock::SendLock for NoLocker {
     async fn release(self) -> Result<(), TusError> {
         Ok(())
     }
 }
 
-impl crate::lock::Locker for NoLocker {
+impl crate::lock::SendLocker for NoLocker {
     type LockType = NoLocker;
     async fn acquire(&self, _id: &crate::info::UploadId) -> Result<NoLocker, TusError> {
         Ok(NoLocker)

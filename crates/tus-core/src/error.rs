@@ -28,6 +28,9 @@ pub enum TusError {
     #[error("upload size exceeds server maximum of {max} bytes")]
     EntityTooLarge { max: u64 },
 
+    #[error("chunk exceeds declared upload length (declared {declared} bytes, end offset would be {end})")]
+    ExceedsUploadLength { declared: u64, end: u64 },
+
     #[error("checksum mismatch")]
     ChecksumMismatch,
 
@@ -95,8 +98,12 @@ impl TusError {
             Self::NotFound(_) => StatusCode::NOT_FOUND,
             Self::Gone => StatusCode::GONE,
             Self::EntityTooLarge { .. } => StatusCode::PAYLOAD_TOO_LARGE,
-            // 460 is a non-standard tus status code; http crate accepts arbitrary codes.
-            Self::ChecksumMismatch => StatusCode::from_u16(460).expect("460 is valid"),
+            Self::ExceedsUploadLength { .. } => StatusCode::PAYLOAD_TOO_LARGE,
+            // 460 is a non-standard tus status code.
+            Self::ChecksumMismatch => match StatusCode::from_u16(460) {
+                Ok(s) => s,
+                Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            },
             Self::UnsupportedChecksumAlgorithm(_) => StatusCode::BAD_REQUEST,
             Self::MissingUploadLength => StatusCode::BAD_REQUEST,
             Self::UploadLengthAlreadySet => StatusCode::BAD_REQUEST,
@@ -133,6 +140,13 @@ mod tests {
             (TusError::NotFound("abc".into()), 404),
             (TusError::Gone, 410),
             (TusError::EntityTooLarge { max: 1024 }, 413),
+            (
+                TusError::ExceedsUploadLength {
+                    declared: 10,
+                    end: 20,
+                },
+                413,
+            ),
             (TusError::ChecksumMismatch, 460),
             (TusError::UnsupportedChecksumAlgorithm("crc32".into()), 400),
             (TusError::MissingUploadLength, 400),

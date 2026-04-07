@@ -3,9 +3,9 @@ use http::{HeaderMap, StatusCode};
 use crate::{
     error::TusError,
     handler::{TusRequest, TusResponse},
-    lock::Locker,
+    lock::SendLocker,
     proto::*,
-    store::DataStore,
+    store::SendDataStore,
     util::static_header,
 };
 
@@ -16,8 +16,8 @@ pub(super) async fn handle<S, L>(
     _req: &TusRequest,
 ) -> Result<TusResponse, TusError>
 where
-    S: DataStore + Send + Sync + 'static,
-    L: Locker + Send + Sync + 'static,
+    S: SendDataStore + Send + Sync + 'static,
+    L: SendLocker + Send + Sync + 'static,
 {
     let mut headers = HeaderMap::new();
 
@@ -42,7 +42,7 @@ where
     if ext.checksum {
         exts.push(EXT_CHECKSUM);
     }
-    if ext.checksum_trailer {
+    if ext.checksum_trailer && CHECKSUM_TRAILER_IMPLEMENTED {
         exts.push(EXT_CHECKSUM_TRAILER);
     }
     if ext.termination {

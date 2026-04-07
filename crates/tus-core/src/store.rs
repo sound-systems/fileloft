@@ -37,7 +37,7 @@ pub trait Upload {
 /// `TusError::ExtensionNotEnabled` from extension methods your store doesn't support.
 #[trait_variant::make(SendDataStore: Send)]
 pub trait DataStore {
-    type UploadType: Upload + Send;
+    type UploadType: SendUpload;
 
     /// Create a new upload slot and return a handle to it.
     async fn create_upload(&self, info: UploadInfo) -> Result<Self::UploadType, TusError>;
