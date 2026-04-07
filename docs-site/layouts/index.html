@@ -1,0 +1,27 @@
+{{ define "main" }}
+<section class="hero">
+  <div class="container">
+    <img class="logo" src="{{ "logo.png" | relURL }}" alt="fileloft logo" width="96" height="96">
+    <h1>{{ .Site.Title }}</h1>
+    <p class="tagline">{{ .Site.Params.tagline }}</p>
+    <div class="badges">
+      <span class="badge">Rust</span>
+      <span class="badge">tus 1.0.0</span>
+      <span class="badge">Axum &middot; Actix &middot; Rocket</span>
+      <span class="badge">MIT</span>
+    </div>
+  </div>
+</section>
+
+{{ $sections := where .Site.RegularPages "Section" "sections" }}
+{{ range $sections.ByWeight }}
+<section id="{{ .Slug }}">
+  <div class="container">
+    <h2>{{ .Title }}</h2>
+    <div class="content">
+      {{ .Content }}
+    </div>
+  </div>
+</section>
+{{ end }}
+{{ end }}

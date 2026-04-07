@@ -1,2 +1,5 @@
-# tus-rs
-a framework agnostic, composable implementation of the tus resumable upload protocol in rust.
+# fileloft
+
+A framework-agnostic, composable implementation of the [tus](https://tus.io) resumable upload protocol in Rust.
+
+Crates: `fileloft-core`, `fileloft-store-memory`, `fileloft-store-fs`, `fileloft-axum`, `fileloft-actix`, `fileloft-rocket`.

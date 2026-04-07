@@ -4,11 +4,11 @@ on:
   push:
     branches: [main]
     paths:
-      - "hugo.toml"
-      - "content/**"
-      - "layouts/**"
-      - "assets/**"
-      - "static/**"
+      - "docs-site/hugo.toml"
+      - "docs-site/content/**"
+      - "docs-site/layouts/**"
+      - "docs-site/assets/**"
+      - "docs-site/static/**"
       - ".github/workflows/docs.yml"
   workflow_dispatch:
 
@@ -24,12 +24,13 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: docs-site
     env:
       HUGO_VERSION: 0.140.2
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
       - name: Install Hugo
         run: |
           curl -sSL -o hugo.deb \
@@ -42,7 +43,7 @@ jobs:
         run: hugo --minify --baseURL "${{ steps.pages.outputs.base_url }}/"
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: ./public
+          path: docs-site/public
 
   deploy:
     needs: build

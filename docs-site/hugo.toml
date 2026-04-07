@@ -1,0 +1,20 @@
+baseURL = "https://sound-systems.github.io/fileloft/"
+languageCode = "en-us"
+title = "fileloft"
+enableRobotsTXT = true
+
+[params]
+  description = "A framework-agnostic Rust implementation of the tus resumable upload protocol."
+  tagline = "Resumable uploads for Rust. Compose it into your server, or run it standalone."
+  github = "https://github.com/sound-systems/fileloft"
+  org = "https://github.com/sound-systems"
+
+[markup.goldmark.renderer]
+  unsafe = true
+
+[markup.highlight]
+  noClasses = false
+  style = "github-dark"
+
+[outputs]
+  home = ["HTML"]
