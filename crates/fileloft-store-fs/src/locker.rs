@@ -1,12 +1,12 @@
 use std::path::PathBuf;
 use std::time::Duration;
 
-use fs4::fs_std::FileExt;
 use fileloft_core::{
     error::TusError,
     info::UploadId,
     lock::{SendLock, SendLocker},
 };
+use fs4::fs_std::FileExt;
 
 /// Directory for per-upload `*.lock` files (shared across processes using the same upload root).
 #[derive(Clone, Debug)]
