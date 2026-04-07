@@ -15,6 +15,13 @@ use serde_json::json;
 
 const EXPECTED_BYTES: &[u8] = b"Hello, tus!\n";
 
+/// Uppy Dashboard injects a hidden `files[]` input after async plugin init (CDN ESM).
+const FILE_INPUT_SELECTORS: &[&str] = &[
+    "input[name='files[]']",
+    "#uppy-dashboard input[type='file']",
+    "input[type='file']",
+];
+
 #[tokio::test]
 #[ignore = "requires chromedriver (e.g. chromedriver --port=9515)"]
 async fn uppy_upload_via_tus_then_verify_disk_and_head() {
@@ -56,10 +63,24 @@ async fn uppy_upload_via_tus_then_verify_disk_and_head() {
     let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("test_fixtures/hello.txt");
     let fixture_str = fixture.to_string_lossy().to_string();
 
-    let file_input = client
-        .find(Locator::Css("input[type='file']"))
-        .await
-        .expect("file input");
+    let deadline = Instant::now() + Duration::from_secs(90);
+    let file_input = 'found: loop {
+        for sel in FILE_INPUT_SELECTORS {
+            if let Ok(el) = client.find(Locator::Css(sel)).await {
+                break 'found el;
+            }
+        }
+        if Instant::now() > deadline {
+            let snippet = match client.source().await {
+                Ok(s) => s.chars().take(2500).collect::<String>(),
+                Err(e) => format!("(could not read page source: {e})"),
+            };
+            panic!(
+                "timeout waiting for Uppy file input (CDN modules may have failed to load). Page snippet:\n{snippet}"
+            );
+        }
+        tokio::time::sleep(Duration::from_millis(400)).await;
+    };
 
     let script = r#"
         const el = arguments[0];

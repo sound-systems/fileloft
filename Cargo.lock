@@ -1762,6 +1762,7 @@ name = "fileloft-e2e-uppy"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "bytes",
  "fantoccini",
  "fileloft-axum",
  "fileloft-core",

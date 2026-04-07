@@ -1,0 +1,15 @@
+{
+  "name": "fileloft-e2e-uppy-assets",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-assets.mjs"
+  },
+  "devDependencies": {
+    "@uppy/core": "4.5.3",
+    "@uppy/dashboard": "4.4.3",
+    "@uppy/tus": "4.3.2",
+    "esbuild": "0.25.0"
+  }
+}

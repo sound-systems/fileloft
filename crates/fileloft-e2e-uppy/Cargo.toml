@@ -6,8 +6,10 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
+build = "build.rs"
 
 [dependencies]
+bytes.workspace = true
 fileloft-core.workspace = true
 fileloft-store-fs.workspace = true
 fileloft-axum.workspace = true

@@ -4,32 +4,14 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>fileloft tus + Uppy</title>
-  <link rel="stylesheet" href="https://esm.sh/@uppy/core@4.18.2/dist/style.min.css" />
-  <link rel="stylesheet" href="https://esm.sh/@uppy/dashboard@4.18.2/dist/style.min.css" />
+  <!-- Vendored by `npm run build` → static/vendor/; served by Axum (no CDN at runtime). -->
+  <link rel="stylesheet" href="/assets/uppy-core.min.css" />
+  <link rel="stylesheet" href="/assets/uppy-dashboard.min.css" />
 </head>
 <body>
   <h1>fileloft tus + Uppy (E2E)</h1>
   <div id="uppy-dashboard"></div>
   <p id="upload-status" data-testid="upload-status"></p>
-  <script type="module">
-    import Uppy from 'https://esm.sh/@uppy/core@4.18.2';
-    import Dashboard from 'https://esm.sh/@uppy/dashboard@4.18.2';
-    import Tus from 'https://esm.sh/@uppy/tus@4.18.2';
-
-    const uppy = new Uppy({ id: 'fileloft-e2e' })
-      .use(Dashboard, { inline: true, target: '#uppy-dashboard' })
-      .use(Tus, { endpoint: '/files/', chunkSize: 5 * 1024 * 1024, limit: 1 });
-
-    uppy.on('upload-success', (file, response) => {
-      const el = document.getElementById('upload-status');
-      const uploadURL =
-        (response && response.uploadURL) ||
-        (response && response.uploadUrl) ||
-        '';
-      el.dataset.uploadUrl = uploadURL;
-      el.classList.add('complete');
-      el.textContent = 'upload-complete';
-    });
-  </script>
+  <script type="module" src="/assets/uppy-e2e.js"></script>
 </body>
 </html>
