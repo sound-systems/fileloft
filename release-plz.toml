@@ -9,6 +9,7 @@ pr_labels = ["release"]
 
 [[package]]
 name = "fileloft-integration-tests"
+publish = false
 release = false
 
 [changelog]
