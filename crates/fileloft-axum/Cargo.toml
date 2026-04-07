@@ -1,0 +1,21 @@
+[package]
+name        = "fileloft-axum"
+description = "axum integration for the tus.io resumable upload protocol"
+version.workspace     = true
+edition.workspace     = true
+license.workspace     = true
+rust-version.workspace = true
+
+[dependencies]
+fileloft-core.workspace     = true
+axum.workspace         = true
+tokio.workspace        = true
+tokio-util.workspace   = true
+http.workspace         = true
+http-body-util.workspace = true
+bytes.workspace        = true
+futures-util.workspace = true
+
+[dev-dependencies]
+fileloft-store-memory.workspace = true
+tokio = { workspace = true, features = ["test-util"] }

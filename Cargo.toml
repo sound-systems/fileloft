@@ -1,12 +1,12 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/tus-core",
-    "crates/tus-store-memory",
-    "crates/tus-store-fs",
-    "crates/tus-axum",
-    "crates/tus-actix",
-    "crates/tus-rocket",
+    "crates/fileloft-core",
+    "crates/fileloft-store-memory",
+    "crates/fileloft-store-fs",
+    "crates/fileloft-axum",
+    "crates/fileloft-actix",
+    "crates/fileloft-rocket",
 ]
 
 [workspace.package]
@@ -17,9 +17,9 @@ rust-version = "1.75"
 
 [workspace.dependencies]
 # Internal
-tus-core         = { path = "crates/tus-core" }
-tus-store-memory = { path = "crates/tus-store-memory" }
-tus-store-fs     = { path = "crates/tus-store-fs" }
+fileloft-core         = { path = "crates/fileloft-core" }
+fileloft-store-memory = { path = "crates/fileloft-store-memory" }
+fileloft-store-fs     = { path = "crates/fileloft-store-fs" }
 
 # Async
 tokio        = { version = "1.44", features = ["full"] }

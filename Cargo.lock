@@ -648,6 +648,95 @@ dependencies = [
 ]
 
 [[package]]
+name = "fileloft-actix"
+version = "0.1.0"
+dependencies = [
+ "actix-web",
+ "bytes",
+ "fileloft-core",
+ "fileloft-store-memory",
+ "futures-util",
+ "http 1.4.0",
+ "tokio",
+ "tokio-util",
+]
+
+[[package]]
+name = "fileloft-axum"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "bytes",
+ "fileloft-core",
+ "fileloft-store-memory",
+ "futures-util",
+ "http 1.4.0",
+ "http-body-util",
+ "tokio",
+ "tokio-util",
+]
+
+[[package]]
+name = "fileloft-core"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "bytes",
+ "chrono",
+ "digest",
+ "fileloft-store-memory",
+ "futures",
+ "http 1.4.0",
+ "md-5",
+ "serde",
+ "serde_json",
+ "sha1",
+ "sha2",
+ "thiserror",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "trait-variant",
+ "uuid",
+]
+
+[[package]]
+name = "fileloft-rocket"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "fileloft-core",
+ "fileloft-store-memory",
+ "http 1.4.0",
+ "rocket",
+ "tokio",
+]
+
+[[package]]
+name = "fileloft-store-fs"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "fileloft-core",
+ "fs4",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "fileloft-store-memory"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "fileloft-core",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "find-msvc-tools"
 version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2310,95 +2399,6 @@ name = "try-lock"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
-
-[[package]]
-name = "tus-actix"
-version = "0.1.0"
-dependencies = [
- "actix-web",
- "bytes",
- "futures-util",
- "http 1.4.0",
- "tokio",
- "tokio-util",
- "tus-core",
- "tus-store-memory",
-]
-
-[[package]]
-name = "tus-axum"
-version = "0.1.0"
-dependencies = [
- "axum",
- "bytes",
- "futures-util",
- "http 1.4.0",
- "http-body-util",
- "tokio",
- "tokio-util",
- "tus-core",
- "tus-store-memory",
-]
-
-[[package]]
-name = "tus-core"
-version = "0.1.0"
-dependencies = [
- "base64",
- "bytes",
- "chrono",
- "digest",
- "futures",
- "http 1.4.0",
- "md-5",
- "serde",
- "serde_json",
- "sha1",
- "sha2",
- "thiserror",
- "tokio",
- "tokio-util",
- "tracing",
- "trait-variant",
- "tus-store-memory",
- "uuid",
-]
-
-[[package]]
-name = "tus-rocket"
-version = "0.1.0"
-dependencies = [
- "bytes",
- "http 1.4.0",
- "rocket",
- "tokio",
- "tus-core",
- "tus-store-memory",
-]
-
-[[package]]
-name = "tus-store-fs"
-version = "0.1.0"
-dependencies = [
- "bytes",
- "fs4",
- "serde",
- "serde_json",
- "tempfile",
- "tokio",
- "tracing",
- "tus-core",
-]
-
-[[package]]
-name = "tus-store-memory"
-version = "0.1.0"
-dependencies = [
- "bytes",
- "tokio",
- "tracing",
- "tus-core",
-]
 
 [[package]]
 name = "typenum"
