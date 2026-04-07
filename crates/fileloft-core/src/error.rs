@@ -130,7 +130,6 @@ mod tests {
 
     /// Every TusError variant must map to a well-defined HTTP status code.
     #[test]
-    #[allow(clippy::io_other_error)] // MSRV 1.75: `io::Error::other` is Rust 1.83+
     fn status_code_mapping() {
         let cases: &[(TusError, u16)] = &[
             (TusError::MissingTusResumable, 412),
@@ -162,7 +161,7 @@ mod tests {
             (TusError::LockTimeout("id1".into()), 408),
             (TusError::LockConflict("id1".into()), 423),
             (TusError::HookRejected("not allowed".into()), 403),
-            (TusError::Io(std::io::Error::new(std::io::ErrorKind::Other, "disk full")), 500),
+            (TusError::Io(std::io::Error::other("disk full")), 500),
             (TusError::Serialization(serde_json::from_str::<()>("!").unwrap_err()), 500),
             (TusError::Internal("oops".into()), 500),
         ];
