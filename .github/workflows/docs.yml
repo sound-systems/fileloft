@@ -12,6 +12,9 @@ on:
       - ".github/workflows/docs.yml"
   workflow_dispatch:
 
+# Deploy still requires Pages enabled once: Settings → Pages → Build: GitHub Actions.
+# We do not use actions/configure-pages here: its API returns 404 until Pages exists,
+# which blocks the first build; baseURL is set in docs-site/hugo.toml instead.
 permissions:
   contents: read
   pages: write
@@ -30,18 +33,15 @@ jobs:
     env:
       HUGO_VERSION: 0.140.2
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install Hugo
         run: |
           curl -sSL -o hugo.deb \
             https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb
           sudo dpkg -i hugo.deb
-      - name: Configure Pages
-        id: pages
-        uses: actions/configure-pages@v5
       - name: Build
-        run: hugo --minify --baseURL "${{ steps.pages.outputs.base_url }}/"
-      - uses: actions/upload-pages-artifact@v3
+        run: hugo --minify
+      - uses: actions/upload-pages-artifact@v4
         with:
           path: docs-site/public
 
@@ -53,4 +53,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
