@@ -1,4 +1,5 @@
 use std::pin::Pin;
+use std::str::FromStr;
 use std::task::{Context, Poll};
 
 use base64::{engine::general_purpose::STANDARD, Engine};
@@ -17,15 +18,6 @@ pub enum ChecksumAlgorithm {
 }
 
 impl ChecksumAlgorithm {
-    pub fn from_str(s: &str) -> Result<Self, TusError> {
-        match s.to_lowercase().as_str() {
-            "sha1" => Ok(Self::Sha1),
-            "sha256" => Ok(Self::Sha256),
-            "md5" => Ok(Self::Md5),
-            other => Err(TusError::UnsupportedChecksumAlgorithm(other.to_string())),
-        }
-    }
-
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Sha1 => "sha1",
@@ -43,6 +35,19 @@ impl ChecksumAlgorithm {
     }
 }
 
+impl FromStr for ChecksumAlgorithm {
+    type Err = TusError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "sha1" => Ok(Self::Sha1),
+            "sha256" => Ok(Self::Sha256),
+            "md5" => Ok(Self::Md5),
+            other => Err(TusError::UnsupportedChecksumAlgorithm(other.to_string())),
+        }
+    }
+}
+
 /// Comma-separated list of algorithms to advertise in `Tus-Checksum-Algorithm`.
 pub fn algorithms_header() -> String {
     SUPPORTED_CHECKSUM_ALGORITHMS.join(",")
@@ -53,7 +58,7 @@ pub fn parse_checksum_header(value: &str) -> Result<(ChecksumAlgorithm, Vec<u8>)
     let (alg_str, b64) = value.split_once(' ').ok_or_else(|| {
         TusError::InvalidMetadata("malformed Upload-Checksum header (expected '<alg> <base64>')".into())
     })?;
-    let algorithm = ChecksumAlgorithm::from_str(alg_str)?;
+    let algorithm: ChecksumAlgorithm = alg_str.parse()?;
     let hash = STANDARD
         .decode(b64.trim())
         .map_err(|e| TusError::InvalidMetadata(format!("bad base64 in Upload-Checksum: {e}")))?;

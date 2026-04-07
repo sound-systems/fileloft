@@ -130,6 +130,7 @@ mod tests {
 
     /// Every TusError variant must map to a well-defined HTTP status code.
     #[test]
+    #[allow(clippy::io_other_error)] // MSRV 1.75: `io::Error::other` is Rust 1.83+
     fn status_code_mapping() {
         let cases: &[(TusError, u16)] = &[
             (TusError::MissingTusResumable, 412),

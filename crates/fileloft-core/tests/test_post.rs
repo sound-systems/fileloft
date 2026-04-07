@@ -65,8 +65,10 @@ async fn post_missing_upload_length_returns_400() {
 
 #[tokio::test]
 async fn post_exceeds_max_size_returns_413() {
-    let mut config = Config::default();
-    config.max_size = 100;
+    let config = Config {
+        max_size: 100,
+        ..Default::default()
+    };
     let h = make_handler_with_config(config);
 
     let resp = h.handle(post_req(200)).await;

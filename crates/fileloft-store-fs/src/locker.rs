@@ -49,6 +49,7 @@ impl SendLocker for FileLocker {
             loop {
                 let f = std::fs::OpenOptions::new()
                     .create(true)
+                    .truncate(false)
                     .read(true)
                     .write(true)
                     .open(&path)
@@ -89,7 +90,7 @@ impl SendLock for FileLock {
             .ok_or_else(|| TusError::Internal("lock already released".into()))?;
         std::mem::forget(self);
         tokio::task::spawn_blocking(move || {
-            file.unlock().map_err(TusError::Io)?;
+            FileExt::unlock(&file).map_err(TusError::Io)?;
             let _ = std::fs::remove_file(&path);
             Ok::<(), TusError>(())
         })
@@ -101,7 +102,7 @@ impl SendLock for FileLock {
 impl Drop for FileLock {
     fn drop(&mut self) {
         if let Some(f) = self.file.take() {
-            let _ = f.unlock();
+            let _ = FileExt::unlock(&f);
         }
         let _ = std::fs::remove_file(&self.path);
     }
