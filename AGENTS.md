@@ -15,10 +15,12 @@ Use this document when working in this repository: it summarizes purpose, layout
 | `crates/fileloft-store-fs` | Filesystem store + `FileLocker`. **Published.** |
 | `crates/fileloft-store-gcs`, `fileloft-store-s3`, `fileloft-store-azure` | Object-storage backends. **Published** (cloud-specific deps). |
 | `crates/fileloft-axum`, `fileloft-actix`, `fileloft-rocket` | Adapters: build a `TusHandler`, expose framework-specific routers. **Published.** |
+| `crates/fileloft-server` | **Not published.** Standalone Axum binary with Cargo features `backend-fs` / `backend-s3` / `backend-gcs` / `backend-azure`. Reads `FILELOFT_*` env vars. |
 | `crates/fileloft-integration-tests` | **Not published.** Black-box HTTP tests against the core handler + memory store (tus flows: POST, PATCH, HEAD, DELETE, extensions). |
 | `crates/fileloft-e2e-uppy` | **Not published.** Axum demo app + vendored Uppy bundle + optional headless WebDriver e2e (`#[ignore]`). |
 | `docs-site/` | Hugo site for user-facing documentation. |
-| `Makefile` | Developer ergonomics: `help`, `setup`, `test-unit`, `test-integration`, `test-e2e`, `test-all`. |
+| `Dockerfile` | Multi-stage build; `ARG BACKEND=fs` selects the storage backend. |
+| `Makefile` | Developer ergonomics: `help`, `setup`, `test-unit`, `test-integration`, `test-e2e`, `test-all`, `docker-build-*`. |
 
 Root `Cargo.toml` is the workspace manifest; internal crates use `path` + version for `cargo publish`.
 
@@ -49,7 +51,7 @@ Root `Cargo.toml` is the workspace manifest; internal crates use `path` + versio
 | Target | What it runs |
 | --- | --- |
 | `make setup` | `cargo fetch` + `npm ci` in `crates/fileloft-e2e-uppy` (JS deps for bundling Uppy assets). |
-| `make test-unit` | Workspace tests **excluding** `fileloft-integration-tests` and `fileloft-e2e-uppy` (in-crate / unit tests). |
+| `make test-unit` | Workspace tests **excluding** `fileloft-integration-tests`, `fileloft-e2e-uppy`, and `fileloft-server` (in-crate / unit tests). |
 | `make test-integration` | `cargo test -p fileloft-integration-tests`. |
 | `make test-e2e` | `cargo test -p fileloft-e2e-uppy -- --ignored` — requires Chrome and a **matching** ChromeDriver (e.g. `chromedriver --port=9515`). |
 | `make test-all` | Runs unit, then integration, then e2e. |
@@ -71,4 +73,4 @@ The `fileloft-e2e-uppy` crate vendors a browser bundle under `static/vendor/` so
 
 ## Container image
 
-The main README documents `ghcr.io/sound-systems/fileloft` and environment variables (`FILELOFT_BIND`, `FILELOFT_DATA_DIR`, etc.). Docker build details may live outside this workspace; the `Makefile` may gain Docker targets later.
+The repository includes a `Dockerfile` at the root and `Makefile` targets for building per-backend images. The `BACKEND` build arg (`fs`, `s3`, `gcs`, `azure`) selects which Cargo feature is compiled into the binary. Images are published to `ghcr.io/sound-systems/fileloft` with tag suffixes matching the backend name (`:latest` / `:fs`, `:s3`, `:gcs`, `:azure`).

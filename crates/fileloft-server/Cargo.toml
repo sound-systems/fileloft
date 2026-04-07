@@ -1,0 +1,38 @@
+[package]
+name        = "fileloft-server"
+description = "Standalone tus.io server binary with pluggable storage backends"
+version.workspace     = true
+edition.workspace     = true
+license.workspace     = true
+rust-version.workspace = true
+readme.workspace      = true
+repository.workspace  = true
+homepage.workspace    = true
+keywords.workspace    = true
+categories.workspace  = true
+publish = false
+
+[[bin]]
+name = "fileloft-server"
+path = "src/main.rs"
+
+[features]
+default = ["backend-fs"]
+backend-fs    = ["dep:fileloft-store-fs"]
+backend-s3    = ["dep:fileloft-store-s3"]
+backend-gcs   = ["dep:fileloft-store-gcs"]
+backend-azure = ["dep:fileloft-store-azure"]
+
+[dependencies]
+fileloft-core.workspace  = true
+fileloft-axum.workspace  = true
+axum.workspace           = true
+tokio.workspace          = true
+tracing.workspace        = true
+tracing-subscriber.workspace = true
+
+# Backend stores (optional, gated by features)
+fileloft-store-fs    = { workspace = true, optional = true }
+fileloft-store-s3    = { workspace = true, optional = true }
+fileloft-store-gcs   = { workspace = true, optional = true }
+fileloft-store-azure = { workspace = true, optional = true }

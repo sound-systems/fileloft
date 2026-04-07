@@ -1801,6 +1801,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "fileloft-server"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "fileloft-axum",
+ "fileloft-core",
+ "fileloft-store-azure",
+ "fileloft-store-fs",
+ "fileloft-store-gcs",
+ "fileloft-store-s3",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "fileloft-store-azure"
 version = "0.1.0"
 dependencies = [

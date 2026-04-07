@@ -7,7 +7,10 @@
 ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 E2E_CRATE := $(ROOT)crates/fileloft-e2e-uppy
 
-.PHONY: help setup e2e-assets test-unit test-integration test-e2e test-all
+IMAGE ?= ghcr.io/sound-systems/fileloft
+
+.PHONY: help setup e2e-assets test-unit test-integration test-e2e test-all \
+	docker-build-fs docker-build-s3 docker-build-gcs docker-build-azure docker-build-all
 
 help: ## Show available targets and what they do
 	@printf '\n'
@@ -24,9 +27,9 @@ setup: ## Fetch Rust deps and install npm packages for the e2e Uppy asset bundle
 e2e-assets: ## Install npm deps and build vendored Uppy bundle (static/vendor/uppy-e2e.js)
 	cd "$(E2E_CRATE)" && npm ci && npm run build
 
-test-unit: ## Run library/unit tests (workspace crates except integration + e2e packages)
+test-unit: ## Run library/unit tests (workspace crates except integration + e2e + server packages)
 	cargo test --manifest-path "$(ROOT)Cargo.toml" --workspace \
-		--exclude fileloft-integration-tests --exclude fileloft-e2e-uppy
+		--exclude fileloft-integration-tests --exclude fileloft-e2e-uppy --exclude fileloft-server
 
 test-integration: ## Run workspace integration tests (fileloft-integration-tests)
 	cargo test --manifest-path "$(ROOT)Cargo.toml" -p fileloft-integration-tests
@@ -35,3 +38,17 @@ test-e2e: e2e-assets ## Run headless browser e2e tests (requires Chrome + matchi
 	cargo test --manifest-path "$(ROOT)Cargo.toml" -p fileloft-e2e-uppy -- --ignored
 
 test-all: test-unit test-integration test-e2e ## Run unit, then integration, then e2e tests
+
+docker-build-fs: ## Build the filesystem Docker image (default)
+	docker build --build-arg BACKEND=fs -t $(IMAGE):latest -t $(IMAGE):fs .
+
+docker-build-s3: ## Build the S3 Docker image
+	docker build --build-arg BACKEND=s3 -t $(IMAGE):s3 .
+
+docker-build-gcs: ## Build the GCS Docker image
+	docker build --build-arg BACKEND=gcs -t $(IMAGE):gcs .
+
+docker-build-azure: ## Build the Azure Blob Storage Docker image
+	docker build --build-arg BACKEND=azure -t $(IMAGE):azure .
+
+docker-build-all: docker-build-fs docker-build-s3 docker-build-gcs docker-build-azure ## Build all Docker images

@@ -7,11 +7,11 @@
 **fileloft** is a Rust implementation of the [tus](https://tus.io) resumable upload protocol. It ships as a small set of composable crates you can embed in an existing HTTP server, or run as a standalone tus endpoint via the published container image.
 
 - **Framework agnostic** — protocol core with no transport assumptions, plus adapters for Axum, Actix Web, and Rocket.
-- **Pluggable storage** — a `DataStore` trait with in-memory and filesystem backends; bring your own for object storage or other backends.
+- **Pluggable storage** — a `DataStore` trait with filesystem, S3, GCS, and Azure Blob Storage backends.
 - **Standalone or embedded** — use it as a library or run the prebuilt image when you only need a tus endpoint.
 - **Safe by default** — `#![forbid(unsafe_code)]` across the workspace, with conservative defaults for limits, locking, and checksums.
 
-Crates: `fileloft-core`, `fileloft-store-memory`, `fileloft-store-fs`, `fileloft-axum`, `fileloft-actix`, `fileloft-rocket`.
+Crates: `fileloft-core`, `fileloft-store-fs`, `fileloft-store-s3`, `fileloft-store-gcs`, `fileloft-store-azure`, `fileloft-axum`, `fileloft-actix`, `fileloft-rocket`.
 
 ## Getting started
 
@@ -55,6 +55,18 @@ Full tus 1.0.0 core plus optional extensions (`creation`, `expiration`, `checksu
 
 ### Run the container
 
+A separate image variant is published for each storage backend. The default
+(`:latest`) uses the local filesystem.
+
+| Tag | Backend | Example |
+| --- | --- | --- |
+| `latest`, `fs` | Filesystem | `ghcr.io/sound-systems/fileloft:latest` |
+| `s3` | Amazon S3 / S3-compatible | `ghcr.io/sound-systems/fileloft:s3` |
+| `gcs` | Google Cloud Storage | `ghcr.io/sound-systems/fileloft:gcs` |
+| `azure` | Azure Blob Storage | `ghcr.io/sound-systems/fileloft:azure` |
+
+**Filesystem (default):**
+
 ```bash
 docker run --rm \
   -p 8080:8080 \
@@ -62,16 +74,48 @@ docker run --rm \
   ghcr.io/sound-systems/fileloft:latest
 ```
 
-The server listens on `:8080` and stores data under `/var/lib/fileloft`. Common environment overrides:
+**S3:**
+
+```bash
+docker run --rm \
+  -p 8080:8080 \
+  -e FILELOFT_S3_BUCKET=my-uploads \
+  -e AWS_ACCESS_KEY_ID \
+  -e AWS_SECRET_ACCESS_KEY \
+  -e AWS_REGION=us-east-1 \
+  ghcr.io/sound-systems/fileloft:s3
+```
+
+**GCS:**
+
+```bash
+docker run --rm \
+  -p 8080:8080 \
+  -e FILELOFT_GCS_BUCKET=my-uploads \
+  -v /path/to/keyfile.json:/credentials.json:ro \
+  -e GOOGLE_APPLICATION_CREDENTIALS=/credentials.json \
+  ghcr.io/sound-systems/fileloft:gcs
+```
+
+**Azure:**
+
+```bash
+docker run --rm \
+  -p 8080:8080 \
+  -e FILELOFT_AZURE_CONTAINER=my-uploads \
+  -e AZURE_STORAGE_CONNECTION_STRING \
+  ghcr.io/sound-systems/fileloft:azure
+```
+
+All variants share these common environment variables:
 
 | Variable | Default | Description |
 | --- | --- | --- |
 | `FILELOFT_BIND` | `0.0.0.0:8080` | Address the HTTP server binds to. |
-| `FILELOFT_DATA_DIR` | `/var/lib/fileloft` | Directory used by the filesystem store. |
 | `FILELOFT_MAX_SIZE` | _unset_ | Maximum allowed upload size, in bytes. |
-| `FILELOFT_BASE_PATH` | `/files` | Path the tus endpoints are mounted under. |
+| `FILELOFT_BASE_PATH` | `/files/` | Path the tus endpoints are mounted under. |
 
-More detail lives in the Hugo site under `docs-site`.
+See the docs site for the full per-backend configuration reference.
 
 Quick health check with any tus 1.0.0 client:
 

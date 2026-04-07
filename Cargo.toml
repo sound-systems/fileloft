@@ -10,6 +10,7 @@ members = [
     "crates/fileloft-axum",
     "crates/fileloft-actix",
     "crates/fileloft-rocket",
+    "crates/fileloft-server",
     "crates/fileloft-integration-tests",
     "crates/fileloft-e2e-uppy",
 ]

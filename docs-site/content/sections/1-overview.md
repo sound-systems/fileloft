@@ -15,8 +15,8 @@ A protocol core with no transport assumptions, plus thin adapters for Axum,
 Actix Web, and Rocket. Bring your own router.
 {{< /prop >}}
 {{< prop title="Pluggable storage" >}}
-A `DataStore` trait with first-party in-memory and filesystem backends. Add
-your own for S3, GCS, or anything else.
+A `DataStore` trait with first-party filesystem, S3, GCS, and Azure Blob
+Storage backends. Each backend ships as its own crate and Docker image variant.
 {{< /prop >}}
 {{< prop title="Standalone or embedded" >}}
 Use it as a library inside a custom Rust server, or run the prebuilt binary
