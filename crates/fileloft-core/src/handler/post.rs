@@ -7,8 +7,8 @@ use crate::{
     info::{UploadId, UploadInfo},
     lock::SendLocker,
     proto::{
-        HDR_CONTENT_TYPE, HDR_LOCATION, HDR_UPLOAD_CONCAT, HDR_UPLOAD_EXPIRES,
-        HDR_UPLOAD_LENGTH, HDR_UPLOAD_METADATA, HDR_UPLOAD_OFFSET,
+        HDR_CONTENT_TYPE, HDR_LOCATION, HDR_UPLOAD_CONCAT, HDR_UPLOAD_EXPIRES, HDR_UPLOAD_LENGTH,
+        HDR_UPLOAD_METADATA, HDR_UPLOAD_OFFSET,
     },
     store::{SendDataStore, SendUpload as _},
     util::{has_defer_length, parse_upload_length, request_base_url, u64_header},
@@ -61,7 +61,9 @@ where
     // Max-size guard
     if let Some(size) = upload_length {
         if h.config.max_size > 0 && size > h.config.max_size {
-            return Err(TusError::EntityTooLarge { max: h.config.max_size });
+            return Err(TusError::EntityTooLarge {
+                max: h.config.max_size,
+            });
         }
     }
 
@@ -150,9 +152,7 @@ where
     }
 
     // Optional: remove partial uploads after a successful final concatenation.
-    if is_final
-        && h.config.extensions.concatenation
-        && h.config.extensions.cleanup_concat_partials
+    if is_final && h.config.extensions.concatenation && h.config.extensions.cleanup_concat_partials
     {
         for partial_id in &final_info.partial_uploads {
             let u = h.store.get_upload(partial_id).await?;

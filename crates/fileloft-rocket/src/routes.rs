@@ -1,17 +1,17 @@
 use std::io::Cursor;
 use std::sync::Arc;
 
+use fileloft_core::{
+    handler::{TusHandler, TusRequest, TusResponse},
+    lock::SendLocker,
+    store::SendDataStore,
+};
 use rocket::data::{Data, ToByteUnit};
 use rocket::http::{Header, Method, Status};
 use rocket::response::Response;
 use rocket::route::{Handler, Outcome, Route};
 use rocket::tokio::io::AsyncReadExt;
 use rocket::Request;
-use fileloft_core::{
-    handler::{TusHandler, TusRequest, TusResponse},
-    lock::SendLocker,
-    store::SendDataStore,
-};
 
 /// Mount with `rocket.mount("/files", tus_routes(handler))`.
 pub fn tus_routes<S, L>(handler: Arc<TusHandler<S, L>>) -> Vec<Route>

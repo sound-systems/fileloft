@@ -8,12 +8,12 @@ use axum::{
     routing::any,
     Router,
 };
-use http_body_util::BodyExt;
 use fileloft_core::{
     handler::{TusHandler, TusRequest, TusResponse},
     lock::SendLocker,
     store::SendDataStore,
 };
+use http_body_util::BodyExt;
 
 /// Mount with [`Router::nest`], e.g. `.nest("/files", tus_router(handler))`.
 pub fn tus_router<S, L>(handler: Arc<TusHandler<S, L>>) -> Router

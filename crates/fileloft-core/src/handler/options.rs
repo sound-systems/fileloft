@@ -56,7 +56,9 @@ where
         let ext_str = exts.join(",");
         headers.insert(
             HDR_TUS_EXTENSION,
-            ext_str.parse().map_err(|_| TusError::Internal("bad extension header".into()))?,
+            ext_str
+                .parse()
+                .map_err(|_| TusError::Internal("bad extension header".into()))?,
         );
     }
 

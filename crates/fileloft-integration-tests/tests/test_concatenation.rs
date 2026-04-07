@@ -1,11 +1,7 @@
 mod helpers;
 use helpers::*;
 
-use fileloft_core::{
-    config::Config,
-    handler::TusRequest,
-    proto::*,
-};
+use fileloft_core::{config::Config, handler::TusRequest, proto::*};
 
 fn make_concat_handler() -> std::sync::Arc<TestHandler> {
     let mut config = Config::default();
@@ -19,18 +15,22 @@ async fn create_partial(h: &TestHandler, data: &[u8]) -> String {
     headers.insert(HDR_UPLOAD_LENGTH, data.len().to_string().parse().unwrap());
     headers.insert(HDR_UPLOAD_CONCAT, "partial".parse().unwrap());
     headers.insert("host", "localhost".parse().unwrap());
-    let post = h.handle(TusRequest {
-        method: http::Method::POST,
-        uri: "/files/".parse().unwrap(),
-        upload_id: None,
-        headers,
-        body: None,
-    }).await;
+    let post = h
+        .handle(TusRequest {
+            method: http::Method::POST,
+            uri: "/files/".parse().unwrap(),
+            upload_id: None,
+            headers,
+            body: None,
+        })
+        .await;
     assert_eq!(post.status.as_u16(), 201, "partial create failed");
     let id = id_from_response(&post);
 
     // Upload the data
-    let patch = h.handle(patch_req(&id, 0, bytes::Bytes::copy_from_slice(data))).await;
+    let patch = h
+        .handle(patch_req(&id, 0, bytes::Bytes::copy_from_slice(data)))
+        .await;
     assert_eq!(patch.status.as_u16(), 204, "partial upload failed");
 
     id
@@ -48,13 +48,15 @@ async fn concatenation_assembles_partials() {
     let mut headers = tus_headers();
     headers.insert(HDR_UPLOAD_CONCAT, concat_value.parse().unwrap());
     headers.insert("host", "localhost".parse().unwrap());
-    let post_final = h.handle(TusRequest {
-        method: http::Method::POST,
-        uri: "/files/".parse().unwrap(),
-        upload_id: None,
-        headers,
-        body: None,
-    }).await;
+    let post_final = h
+        .handle(TusRequest {
+            method: http::Method::POST,
+            uri: "/files/".parse().unwrap(),
+            upload_id: None,
+            headers,
+            body: None,
+        })
+        .await;
     assert_eq!(
         post_final.status.as_u16(),
         201,
@@ -80,17 +82,21 @@ async fn patch_on_final_upload_returns_403() {
     let mut headers = tus_headers();
     headers.insert(HDR_UPLOAD_CONCAT, concat_value.parse().unwrap());
     headers.insert("host", "localhost".parse().unwrap());
-    let post_final = h.handle(TusRequest {
-        method: http::Method::POST,
-        uri: "/files/".parse().unwrap(),
-        upload_id: None,
-        headers,
-        body: None,
-    }).await;
+    let post_final = h
+        .handle(TusRequest {
+            method: http::Method::POST,
+            uri: "/files/".parse().unwrap(),
+            upload_id: None,
+            headers,
+            body: None,
+        })
+        .await;
     let final_id = id_from_response(&post_final);
 
     // PATCH on a final upload must be rejected
-    let patch = h.handle(patch_req(&final_id, 0, bytes::Bytes::from_static(b"extra"))).await;
+    let patch = h
+        .handle(patch_req(&final_id, 0, bytes::Bytes::from_static(b"extra")))
+        .await;
     assert_eq!(patch.status.as_u16(), 403);
 }
 
@@ -103,29 +109,38 @@ async fn final_concat_with_incomplete_partial_returns_400() {
     headers.insert(HDR_UPLOAD_LENGTH, "100".parse().unwrap());
     headers.insert(HDR_UPLOAD_CONCAT, "partial".parse().unwrap());
     headers.insert("host", "localhost".parse().unwrap());
-    let partial = h.handle(TusRequest {
-        method: http::Method::POST,
-        uri: "/files/".parse().unwrap(),
-        upload_id: None,
-        headers,
-        body: None,
-    }).await;
+    let partial = h
+        .handle(TusRequest {
+            method: http::Method::POST,
+            uri: "/files/".parse().unwrap(),
+            upload_id: None,
+            headers,
+            body: None,
+        })
+        .await;
     let partial_id = id_from_response(&partial);
 
     // Only upload 5 bytes (incomplete)
-    h.handle(patch_req(&partial_id, 0, bytes::Bytes::from_static(b"hello"))).await;
+    h.handle(patch_req(
+        &partial_id,
+        0,
+        bytes::Bytes::from_static(b"hello"),
+    ))
+    .await;
 
     // Attempt final concat with incomplete partial
     let concat_value = format!("final;http://localhost/files/{partial_id}");
     let mut headers2 = tus_headers();
     headers2.insert(HDR_UPLOAD_CONCAT, concat_value.parse().unwrap());
     headers2.insert("host", "localhost".parse().unwrap());
-    let resp = h.handle(TusRequest {
-        method: http::Method::POST,
-        uri: "/files/".parse().unwrap(),
-        upload_id: None,
-        headers: headers2,
-        body: None,
-    }).await;
+    let resp = h
+        .handle(TusRequest {
+            method: http::Method::POST,
+            uri: "/files/".parse().unwrap(),
+            upload_id: None,
+            headers: headers2,
+            body: None,
+        })
+        .await;
     assert_eq!(resp.status.as_u16(), 400);
 }

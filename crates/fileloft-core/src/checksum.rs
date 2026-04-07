@@ -56,7 +56,9 @@ pub fn algorithms_header() -> String {
 /// Parse the `Upload-Checksum` header: `"<algorithm> <base64-hash>"`.
 pub fn parse_checksum_header(value: &str) -> Result<(ChecksumAlgorithm, Vec<u8>), TusError> {
     let (alg_str, b64) = value.split_once(' ').ok_or_else(|| {
-        TusError::InvalidMetadata("malformed Upload-Checksum header (expected '<alg> <base64>')".into())
+        TusError::InvalidMetadata(
+            "malformed Upload-Checksum header (expected '<alg> <base64>')".into(),
+        )
     })?;
     let algorithm: ChecksumAlgorithm = alg_str.parse()?;
     let hash = STANDARD

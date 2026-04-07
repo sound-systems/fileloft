@@ -4,13 +4,13 @@
 use std::sync::Arc;
 
 use bytes::Bytes;
-use http::{HeaderMap, Method};
 use fileloft_core::{
     config::Config,
     handler::{TusHandler, TusRequest, TusResponse},
     proto::*,
 };
 use fileloft_store_memory::{MemoryLocker, MemoryStore};
+use http::{HeaderMap, Method};
 
 pub type TestHandler = TusHandler<MemoryStore, MemoryLocker>;
 
@@ -42,7 +42,10 @@ pub fn options_req() -> TusRequest {
 
 pub fn post_req(upload_length: u64) -> TusRequest {
     let mut headers = tus_headers();
-    headers.insert(HDR_UPLOAD_LENGTH, upload_length.to_string().parse().unwrap());
+    headers.insert(
+        HDR_UPLOAD_LENGTH,
+        upload_length.to_string().parse().unwrap(),
+    );
     headers.insert("host", "localhost".parse().unwrap());
     TusRequest {
         method: Method::POST,
@@ -55,11 +58,11 @@ pub fn post_req(upload_length: u64) -> TusRequest {
 
 pub fn post_req_with_body(upload_length: u64, data: Bytes) -> TusRequest {
     let mut headers = tus_headers();
-    headers.insert(HDR_UPLOAD_LENGTH, upload_length.to_string().parse().unwrap());
     headers.insert(
-        HDR_CONTENT_TYPE,
-        CONTENT_TYPE_OCTET_STREAM.parse().unwrap(),
+        HDR_UPLOAD_LENGTH,
+        upload_length.to_string().parse().unwrap(),
     );
+    headers.insert(HDR_CONTENT_TYPE, CONTENT_TYPE_OCTET_STREAM.parse().unwrap());
     headers.insert("host", "localhost".parse().unwrap());
     TusRequest {
         method: Method::POST,
@@ -83,10 +86,7 @@ pub fn head_req(id: &str) -> TusRequest {
 pub fn patch_req(id: &str, offset: u64, data: Bytes) -> TusRequest {
     let mut headers = tus_headers();
     headers.insert(HDR_UPLOAD_OFFSET, offset.to_string().parse().unwrap());
-    headers.insert(
-        HDR_CONTENT_TYPE,
-        CONTENT_TYPE_OCTET_STREAM.parse().unwrap(),
-    );
+    headers.insert(HDR_CONTENT_TYPE, CONTENT_TYPE_OCTET_STREAM.parse().unwrap());
     TusRequest {
         method: Method::PATCH,
         uri: format!("/files/{id}").parse().unwrap(),

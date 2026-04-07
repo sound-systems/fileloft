@@ -83,7 +83,9 @@ where
     if info.size_is_deferred && info.size.is_none() {
         if let Some(declared_size) = parse_upload_length(&req.headers)? {
             if h.config.max_size > 0 && declared_size > h.config.max_size {
-                return Err(TusError::EntityTooLarge { max: h.config.max_size });
+                return Err(TusError::EntityTooLarge {
+                    max: h.config.max_size,
+                });
             }
             upload.declare_length(declared_size).await?;
         }
@@ -110,7 +112,9 @@ where
     // Write chunk — with or without checksum wrapping
     let _bytes_written = if let Some((algorithm, expected_hash)) = checksum {
         let mut checksum_reader = ChecksumReader::new(body, algorithm, expected_hash);
-        let n = upload.write_chunk(client_offset, &mut checksum_reader).await?;
+        let n = upload
+            .write_chunk(client_offset, &mut checksum_reader)
+            .await?;
         checksum_reader.verify()?;
         n
     } else {

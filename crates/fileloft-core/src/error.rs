@@ -133,9 +133,20 @@ mod tests {
     fn status_code_mapping() {
         let cases: &[(TusError, u16)] = &[
             (TusError::MissingTusResumable, 412),
-            (TusError::UnsupportedVersion { version: "0.9".into() }, 412),
+            (
+                TusError::UnsupportedVersion {
+                    version: "0.9".into(),
+                },
+                412,
+            ),
             (TusError::MissingUploadOffset, 400),
-            (TusError::OffsetMismatch { expected: 10, actual: 5 }, 409),
+            (
+                TusError::OffsetMismatch {
+                    expected: 10,
+                    actual: 5,
+                },
+                409,
+            ),
             (TusError::WrongContentType("text/plain".into()), 415),
             (TusError::NotFound("abc".into()), 404),
             (TusError::Gone, 410),
@@ -162,7 +173,10 @@ mod tests {
             (TusError::LockConflict("id1".into()), 423),
             (TusError::HookRejected("not allowed".into()), 403),
             (TusError::Io(std::io::Error::other("disk full")), 500),
-            (TusError::Serialization(serde_json::from_str::<()>("!").unwrap_err()), 500),
+            (
+                TusError::Serialization(serde_json::from_str::<()>("!").unwrap_err()),
+                500,
+            ),
             (TusError::Internal("oops".into()), 500),
         ];
 

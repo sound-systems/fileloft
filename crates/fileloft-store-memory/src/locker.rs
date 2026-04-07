@@ -2,12 +2,12 @@ use std::collections::HashSet;
 use std::sync::Arc;
 use std::time::Duration;
 
-use tokio::sync::Mutex;
 use fileloft_core::{
     error::TusError,
     info::UploadId,
     lock::{SendLock, SendLocker},
 };
+use tokio::sync::Mutex;
 
 type HeldSet = Arc<Mutex<HashSet<String>>>;
 

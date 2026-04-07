@@ -11,6 +11,7 @@ members = [
     "crates/fileloft-actix",
     "crates/fileloft-rocket",
     "crates/fileloft-integration-tests",
+    "crates/fileloft-e2e-uppy",
 ]
 
 [workspace.package]
@@ -32,6 +33,9 @@ fileloft-store-fs     = { path = "crates/fileloft-store-fs", version = "0.1.0" }
 fileloft-store-gcs    = { path = "crates/fileloft-store-gcs", version = "0.1.0" }
 fileloft-store-s3     = { path = "crates/fileloft-store-s3", version = "0.1.0" }
 fileloft-store-azure  = { path = "crates/fileloft-store-azure", version = "0.1.0" }
+fileloft-axum         = { path = "crates/fileloft-axum", version = "0.1.0" }
+fileloft-actix        = { path = "crates/fileloft-actix", version = "0.1.0" }
+fileloft-rocket       = { path = "crates/fileloft-rocket", version = "0.1.0" }
 
 # Async
 tokio        = { version = "1.51", features = ["full"] }
@@ -70,6 +74,12 @@ trait-variant = "0.1"
 
 # Tracing
 tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# E2E / HTTP client
+fantoccini = "0.22"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+tempfile = "3"
 
 # FS locking
 fs4 = "0.13"

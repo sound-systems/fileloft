@@ -111,9 +111,9 @@ impl AzureStoreBuilder {
         {
             let cs = ConnectionString::new(&cs)
                 .map_err(|e| AzureStoreError::ClientInit(e.to_string()))?;
-            let account = cs
-                .account_name
-                .ok_or_else(|| AzureStoreError::ClientInit("connection string missing AccountName".into()))?;
+            let account = cs.account_name.ok_or_else(|| {
+                AzureStoreError::ClientInit("connection string missing AccountName".into())
+            })?;
             let creds = cs
                 .storage_credentials()
                 .map_err(|e| AzureStoreError::ClientInit(e.to_string()))?;
@@ -278,11 +278,7 @@ impl AzureUpload {
     }
 
     async fn delete_blob_best_effort(&self, blob_name: &str) {
-        let _ = self
-            .container
-            .blob_client(blob_name)
-            .delete()
-            .await;
+        let _ = self.container.blob_client(blob_name).delete().await;
     }
 
     /// Stage `source_blob_names` into a new block blob at `dest_blob_name`, then delete sources.
@@ -356,9 +352,9 @@ impl SendUpload for AzureUpload {
         reader.read_to_end(&mut buf).await?;
         let n = buf.len() as u64;
 
-        let end_offset = offset.checked_add(n).ok_or_else(|| {
-            TusError::Internal("upload offset overflow".into())
-        })?;
+        let end_offset = offset
+            .checked_add(n)
+            .ok_or_else(|| TusError::Internal("upload offset overflow".into()))?;
         if let Some(declared) = info.size {
             if end_offset > declared {
                 return Err(TusError::ExceedsUploadLength {
@@ -402,8 +398,7 @@ impl SendUpload for AzureUpload {
             return Ok(());
         }
 
-        self.commit_many_blobs(&dest_key, parts, "finalize")
-            .await?;
+        self.commit_many_blobs(&dest_key, parts, "finalize").await?;
 
         debug!("finalized upload");
         Ok(())
@@ -482,8 +477,7 @@ async fn commit_blob_names_to_dest(
             .map_err(|e| azure_err(e, upload_id, op))?;
 
         let block_id = block_id_for_index(i as u64);
-        dest
-            .put_block(block_id.clone(), Body::from(data))
+        dest.put_block(block_id.clone(), Body::from(data))
             .await
             .map_err(|e| azure_err(e, upload_id, op))?;
         block_list

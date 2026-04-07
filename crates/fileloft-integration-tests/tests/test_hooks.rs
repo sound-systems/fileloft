@@ -1,12 +1,8 @@
 mod helpers;
 use helpers::*;
 
+use fileloft_core::{config::Config, hooks::HookEvent, info::UploadInfoChanges};
 use std::sync::{Arc, Mutex};
-use fileloft_core::{
-    config::Config,
-    hooks::HookEvent,
-    info::UploadInfoChanges,
-};
 
 #[tokio::test]
 async fn upload_created_event_fired_on_post() {
@@ -32,7 +28,8 @@ async fn upload_finished_event_fired_on_complete() {
 
     let post = h.handle(post_req(5)).await;
     let id = id_from_response(&post);
-    h.handle(patch_req(&id, 0, bytes::Bytes::from_static(b"hello"))).await;
+    h.handle(patch_req(&id, 0, bytes::Bytes::from_static(b"hello")))
+        .await;
 
     // Drain events: UploadCreated then UploadProgress then UploadFinished
     let mut got_finished = false;
@@ -52,7 +49,9 @@ async fn pre_create_hook_can_reject() {
     let mut config = Config::default();
     config.hooks.pre_create = Some(Arc::new(|_info| {
         Box::pin(async {
-            Err(fileloft_core::TusError::HookRejected("blocked by policy".into()))
+            Err(fileloft_core::TusError::HookRejected(
+                "blocked by policy".into(),
+            ))
         })
     }));
     let h = make_handler_with_config(config);
@@ -83,7 +82,9 @@ async fn pre_finish_hook_can_reject() {
     let mut config = Config::default();
     config.hooks.pre_finish = Some(Arc::new(|_info| {
         Box::pin(async {
-            Err(fileloft_core::TusError::HookRejected("post-processing failed".into()))
+            Err(fileloft_core::TusError::HookRejected(
+                "post-processing failed".into(),
+            ))
         })
     }));
     let h = make_handler_with_config(config);
@@ -91,7 +92,9 @@ async fn pre_finish_hook_can_reject() {
     let post = h.handle(post_req(5)).await;
     let id = id_from_response(&post);
 
-    let patch = h.handle(patch_req(&id, 0, bytes::Bytes::from_static(b"hello"))).await;
+    let patch = h
+        .handle(patch_req(&id, 0, bytes::Bytes::from_static(b"hello")))
+        .await;
     assert_eq!(patch.status.as_u16(), 403);
 }
 

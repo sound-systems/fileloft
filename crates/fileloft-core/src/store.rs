@@ -1,4 +1,7 @@
-use crate::{error::TusError, info::{UploadId, UploadInfo}};
+use crate::{
+    error::TusError,
+    info::{UploadId, UploadInfo},
+};
 
 /// Operations on a single upload resource.
 #[trait_variant::make(SendUpload: Send)]

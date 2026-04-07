@@ -1,7 +1,6 @@
 mod helpers;
 use helpers::*;
 
-
 #[tokio::test]
 async fn head_returns_offset_zero_on_new_upload() {
     let h = make_handler();

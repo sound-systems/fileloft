@@ -290,10 +290,7 @@ impl GcsUpload {
             if !page_token.is_empty() {
                 req = req.set_page_token(&page_token);
             }
-            let page = req
-                .send()
-                .await
-                .map_err(|e| gcs_err(e, id, "list parts"))?;
+            let page = req.send().await.map_err(|e| gcs_err(e, id, "list parts"))?;
             for obj in &page.objects {
                 if !obj.name.is_empty() {
                     names.push(obj.name.clone());
@@ -309,11 +306,7 @@ impl GcsUpload {
         Ok(names)
     }
 
-    async fn compose_chunk(
-        &self,
-        dest_key: &str,
-        source_keys: &[String],
-    ) -> Result<(), TusError> {
+    async fn compose_chunk(&self, dest_key: &str, source_keys: &[String]) -> Result<(), TusError> {
         if source_keys.is_empty() {
             return Ok(());
         }
@@ -323,9 +316,7 @@ impl GcsUpload {
             .map(|name| SourceObject::new().set_name(name.clone()))
             .collect();
 
-        let dest = Object::new()
-            .set_bucket(&self.bucket)
-            .set_name(dest_key);
+        let dest = Object::new().set_bucket(&self.bucket).set_name(dest_key);
 
         self.control
             .compose_object()
@@ -358,9 +349,9 @@ impl SendUpload for GcsUpload {
         reader.read_to_end(&mut buf).await?;
         let n = buf.len() as u64;
 
-        let end_offset = offset.checked_add(n).ok_or_else(|| {
-            TusError::Internal("upload offset overflow".into())
-        })?;
+        let end_offset = offset
+            .checked_add(n)
+            .ok_or_else(|| TusError::Internal("upload offset overflow".into()))?;
         if let Some(declared) = info.size {
             if end_offset > declared {
                 return Err(TusError::ExceedsUploadLength {

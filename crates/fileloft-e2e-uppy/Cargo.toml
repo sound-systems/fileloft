@@ -1,0 +1,24 @@
+[package]
+name = "fileloft-e2e-uppy"
+description = "Uppy + tus E2E harness for fileloft (manual browser + headless WebDriver tests)"
+publish = false
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+fileloft-core.workspace = true
+fileloft-store-fs.workspace = true
+fileloft-axum.workspace = true
+axum.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[dev-dependencies]
+fileloft-core.workspace = true
+fantoccini.workspace = true
+serde_json.workspace = true
+reqwest.workspace = true
+tempfile.workspace = true

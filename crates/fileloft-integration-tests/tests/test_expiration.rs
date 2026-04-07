@@ -1,8 +1,8 @@
 mod helpers;
 use helpers::*;
 
-use std::time::Duration;
 use fileloft_core::config::Config;
+use std::time::Duration;
 
 #[tokio::test]
 async fn expired_upload_returns_410_on_head() {
@@ -34,7 +34,9 @@ async fn expired_upload_returns_410_on_patch() {
 
     tokio::time::sleep(Duration::from_millis(50)).await;
 
-    let patch = h.handle(patch_req(&id, 0, bytes::Bytes::from_static(b"data"))).await;
+    let patch = h
+        .handle(patch_req(&id, 0, bytes::Bytes::from_static(b"data")))
+        .await;
     assert_eq!(patch.status.as_u16(), 410);
 }
 

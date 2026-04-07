@@ -107,7 +107,11 @@ where
     ) -> TusResponse {
         let mut headers = self.base_headers();
         headers.extend(extra_headers);
-        TusResponse { status, headers, body }
+        TusResponse {
+            status,
+            headers,
+            body,
+        }
     }
 
     /// Build an error response from a `TusError`.
@@ -119,7 +123,11 @@ where
             http::header::CONTENT_TYPE,
             HeaderValue::from_static("text/plain; charset=utf-8"),
         );
-        TusResponse { status, headers, body }
+        TusResponse {
+            status,
+            headers,
+            body,
+        }
     }
 
     /// Headers added to every response.

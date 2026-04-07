@@ -2,13 +2,13 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use bytes::BytesMut;
-use tokio::io::AsyncReadExt;
-use tokio::sync::RwLock;
 use fileloft_core::{
     error::TusError,
     info::{UploadId, UploadInfo},
     store::{SendDataStore, SendUpload},
 };
+use tokio::io::AsyncReadExt;
+use tokio::sync::RwLock;
 
 #[derive(Debug)]
 struct MemoryUploadState {
@@ -95,9 +95,9 @@ impl SendUpload for MemoryUpload {
             .get_mut(self.id.as_str())
             .ok_or_else(|| TusError::NotFound(self.id.to_string()))?;
 
-        let end_offset = offset.checked_add(n).ok_or_else(|| {
-            TusError::Internal("upload offset overflow".into())
-        })?;
+        let end_offset = offset
+            .checked_add(n)
+            .ok_or_else(|| TusError::Internal("upload offset overflow".into()))?;
         if let Some(declared) = entry.info.size {
             if end_offset > declared {
                 return Err(TusError::ExceedsUploadLength {

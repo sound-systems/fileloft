@@ -23,7 +23,10 @@ async fn post_returns_location_header() {
         "Location header missing"
     );
     let location = resp.headers.get(HDR_LOCATION).unwrap().to_str().unwrap();
-    assert!(location.contains("/files/"), "unexpected location: {location}");
+    assert!(
+        location.contains("/files/"),
+        "unexpected location: {location}"
+    );
 }
 
 #[tokio::test]

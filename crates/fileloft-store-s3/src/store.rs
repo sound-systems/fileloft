@@ -120,9 +120,7 @@ impl S3StoreBuilder {
         let client = match self.client {
             Some(c) => c,
             None => {
-                let conf = aws_config::defaults(BehaviorVersion::latest())
-                    .load()
-                    .await;
+                let conf = aws_config::defaults(BehaviorVersion::latest()).load().await;
 
                 let mut b = aws_sdk_s3::config::Builder::from(&conf);
                 if let Some(url) = &self.endpoint_url {
@@ -203,10 +201,7 @@ impl S3Store {
 
         let mut body = resp.body.into_async_read();
         let mut buf = Vec::new();
-        body
-            .read_to_end(&mut buf)
-            .await
-            .map_err(TusError::Io)?;
+        body.read_to_end(&mut buf).await.map_err(TusError::Io)?;
 
         serde_json::from_slice(&buf)
             .map_err(|e| TusError::Internal(format!("deserialize info: {e}")))
@@ -299,10 +294,7 @@ impl S3Upload {
 
         let mut body = resp.body.into_async_read();
         let mut buf = Vec::new();
-        body
-            .read_to_end(&mut buf)
-            .await
-            .map_err(TusError::Io)?;
+        body.read_to_end(&mut buf).await.map_err(TusError::Io)?;
 
         serde_json::from_slice(&buf)
             .map_err(|e| TusError::Internal(format!("deserialize info: {e}")))
@@ -393,16 +385,17 @@ impl S3Upload {
         let mut buffer: Vec<u8> = Vec::new();
 
         let abort_res = async {
-            let run = self.multipart_upload_parts(
-                dest_key,
-                &upload_id,
-                source_keys,
-                &mut buffer,
-                &mut completed,
-                &mut part_number,
-                log_id,
-            )
-            .await;
+            let run = self
+                .multipart_upload_parts(
+                    dest_key,
+                    &upload_id,
+                    source_keys,
+                    &mut buffer,
+                    &mut completed,
+                    &mut part_number,
+                    log_id,
+                )
+                .await;
 
             if let Err(e) = run {
                 let _ = self
@@ -480,10 +473,7 @@ impl S3Upload {
             let mut read_buf = vec![0u8; 64 * 1024];
 
             loop {
-                let n = reader
-                    .read(&mut read_buf)
-                    .await
-                    .map_err(TusError::Io)?;
+                let n = reader.read(&mut read_buf).await.map_err(TusError::Io)?;
                 let eof_on_object = n == 0;
 
                 if n > 0 {
@@ -530,15 +520,8 @@ impl S3Upload {
             .await?;
         } else if !buffer.is_empty() {
             let rest = mem::take(buffer);
-            self.upload_one_part(
-                dest_key,
-                upload_id,
-                rest,
-                part_number,
-                completed,
-                log_id,
-            )
-            .await?;
+            self.upload_one_part(dest_key, upload_id, rest, part_number, completed, log_id)
+                .await?;
         }
 
         Ok(())
@@ -576,9 +559,7 @@ impl S3Upload {
         let etag = match up.e_tag() {
             Some(t) => t.to_string(),
             None => {
-                return Err(TusError::Internal(
-                    "S3 upload part: missing ETag".into(),
-                ));
+                return Err(TusError::Internal("S3 upload part: missing ETag".into()));
             }
         };
 
@@ -612,9 +593,9 @@ impl SendUpload for S3Upload {
         reader.read_to_end(&mut buf).await?;
         let n = buf.len() as u64;
 
-        let end_offset = offset.checked_add(n).ok_or_else(|| {
-            TusError::Internal("upload offset overflow".into())
-        })?;
+        let end_offset = offset
+            .checked_add(n)
+            .ok_or_else(|| TusError::Internal("upload offset overflow".into()))?;
         if let Some(declared) = info.size {
             if end_offset > declared {
                 return Err(TusError::ExceedsUploadLength {
@@ -737,10 +718,7 @@ fn is_not_found<E: ProvideErrorMetadata>(err: &SdkError<E>) -> bool {
     match err {
         SdkError::ServiceError(se) => {
             let code = se.err().meta().code();
-            matches!(
-                code,
-                Some("NoSuchKey") | Some("NotFound") | Some("404")
-            )
+            matches!(code, Some("NoSuchKey") | Some("NotFound") | Some("404"))
         }
         SdkError::ResponseError(re) => re.raw().status().as_u16() == 404,
         _ => false,

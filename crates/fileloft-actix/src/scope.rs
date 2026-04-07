@@ -5,12 +5,12 @@ use actix_web::http::header::{HeaderName, HeaderValue};
 use actix_web::http::{Method, StatusCode};
 use actix_web::web::{self};
 use actix_web::{HttpRequest, HttpResponse};
-use futures_util::StreamExt;
 use fileloft_core::{
     handler::{TusHandler, TusRequest, TusResponse},
     lock::SendLocker,
     store::SendDataStore,
 };
+use futures_util::StreamExt;
 
 /// Register with `App::new().app_data(handler).service(tus_scope::<S,L>())`.
 pub fn tus_scope<S, L>() -> actix_web::Scope
@@ -45,7 +45,13 @@ where
     S: SendDataStore + Send + Sync + 'static,
     L: SendLocker + Send + Sync + 'static,
 {
-    handle_actix(handler.get_ref(), &req, &mut payload, Some(path.into_inner())).await
+    handle_actix(
+        handler.get_ref(),
+        &req,
+        &mut payload,
+        Some(path.into_inner()),
+    )
+    .await
 }
 
 async fn handle_actix<S, L>(

@@ -71,11 +71,9 @@ impl Metadata {
                     let decoded = STANDARD
                         .decode(b64.trim())
                         .map_err(|e| TusError::InvalidMetadata(e.to_string()))?;
-                    Some(
-                        String::from_utf8(decoded).map_err(|e| {
-                            TusError::InvalidMetadata(format!("non-UTF8 value for key {key}: {e}"))
-                        })?,
-                    )
+                    Some(String::from_utf8(decoded).map_err(|e| {
+                        TusError::InvalidMetadata(format!("non-UTF8 value for key {key}: {e}"))
+                    })?)
                 }
             };
             map.insert(key, value);

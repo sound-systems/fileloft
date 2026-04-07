@@ -4,9 +4,7 @@ use crate::{
     error::TusError,
     handler::{TusRequest, TusResponse},
     lock::SendLocker,
-    proto::{
-        HDR_UPLOAD_DEFER_LENGTH, HDR_UPLOAD_LENGTH, HDR_UPLOAD_METADATA, HDR_UPLOAD_OFFSET,
-    },
+    proto::{HDR_UPLOAD_DEFER_LENGTH, HDR_UPLOAD_LENGTH, HDR_UPLOAD_METADATA, HDR_UPLOAD_OFFSET},
     store::{SendDataStore, SendUpload},
     util::{static_header, u64_header},
 };
