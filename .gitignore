@@ -21,3 +21,6 @@ target
 #.idea/
 
 .claude
+
+# Upload data created by `cargo run -p fileloft-e2e-uppy` (demo server)
+uploads/
