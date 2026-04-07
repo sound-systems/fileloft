@@ -1,0 +1,71 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/tus-core",
+    "crates/tus-store-memory",
+    "crates/tus-store-fs",
+    "crates/tus-axum",
+    "crates/tus-actix",
+    "crates/tus-rocket",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+rust-version = "1.75"
+
+[workspace.dependencies]
+# Internal
+tus-core         = { path = "crates/tus-core" }
+tus-store-memory = { path = "crates/tus-store-memory" }
+tus-store-fs     = { path = "crates/tus-store-fs" }
+
+# Async
+tokio        = { version = "1.44", features = ["full"] }
+tokio-util   = { version = "0.7", features = ["io"] }
+futures      = "0.3"
+futures-util = "0.3"
+
+# HTTP
+http           = "1.2"
+http-body      = "1.0"
+http-body-util = "0.1"
+bytes          = "1.10"
+
+# Serialization
+serde      = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Errors
+thiserror = "2.0"
+
+# IDs
+uuid = { version = "1.16", features = ["v4"] }
+
+# Crypto (RustCrypto family, all share digest = "0.10")
+digest = "0.10"
+sha1   = "0.10"
+sha2   = "0.10"
+md-5   = "0.10"
+base64 = "0.22"
+
+# Time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Trait helpers
+trait-variant = "0.1"
+
+# Tracing
+tracing = "0.1"
+
+# FS locking
+fs4 = "0.13"
+
+# Framework integrations
+axum      = { version = "0.8", default-features = false, features = ["http1", "tokio", "json"] }
+actix-web = "4"
+rocket    = "0.5"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
