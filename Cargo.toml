@@ -14,7 +14,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 license = "MIT"
 rust-version = "1.85"
@@ -26,12 +26,12 @@ categories = ["network-programming", "web-programming"]
 
 [workspace.dependencies]
 # Internal (version must track [workspace.package].version for `cargo publish`)
-fileloft-core         = { path = "crates/fileloft-core", version = "0.1.0" }
-fileloft-store-memory = { path = "crates/fileloft-store-memory", version = "0.1.0" }
-fileloft-store-fs     = { path = "crates/fileloft-store-fs", version = "0.1.0" }
-fileloft-store-gcs    = { path = "crates/fileloft-store-gcs", version = "0.1.0" }
-fileloft-store-s3     = { path = "crates/fileloft-store-s3", version = "0.1.0" }
-fileloft-store-azure  = { path = "crates/fileloft-store-azure", version = "0.1.0" }
+fileloft-core         = { path = "crates/fileloft-core", version = "0.1.1" }
+fileloft-store-memory = { path = "crates/fileloft-store-memory", version = "0.1.1" }
+fileloft-store-fs     = { path = "crates/fileloft-store-fs", version = "0.1.1" }
+fileloft-store-gcs    = { path = "crates/fileloft-store-gcs", version = "0.1.1" }
+fileloft-store-s3     = { path = "crates/fileloft-store-s3", version = "0.1.1" }
+fileloft-store-azure  = { path = "crates/fileloft-store-azure", version = "0.1.1" }
 
 # Async
 tokio        = { version = "1.51", features = ["full"] }

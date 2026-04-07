@@ -1675,7 +1675,7 @@ dependencies = [
 
 [[package]]
 name = "fileloft-actix"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "actix-web",
  "bytes",
@@ -1689,7 +1689,7 @@ dependencies = [
 
 [[package]]
 name = "fileloft-axum"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "axum",
  "bytes",
@@ -1704,7 +1704,7 @@ dependencies = [
 
 [[package]]
 name = "fileloft-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.22.1",
  "bytes",
@@ -1727,7 +1727,7 @@ dependencies = [
 
 [[package]]
 name = "fileloft-integration-tests"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.22.1",
  "bytes",
@@ -1740,7 +1740,7 @@ dependencies = [
 
 [[package]]
 name = "fileloft-rocket"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bytes",
  "fileloft-core",
@@ -1752,7 +1752,7 @@ dependencies = [
 
 [[package]]
 name = "fileloft-store-azure"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "azure_core",
  "azure_identity",
@@ -1770,7 +1770,7 @@ dependencies = [
 
 [[package]]
 name = "fileloft-store-fs"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bytes",
  "fileloft-core",
@@ -1784,7 +1784,7 @@ dependencies = [
 
 [[package]]
 name = "fileloft-store-gcs"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bytes",
  "fileloft-core",
@@ -1798,7 +1798,7 @@ dependencies = [
 
 [[package]]
 name = "fileloft-store-memory"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bytes",
  "fileloft-core",
@@ -1808,7 +1808,7 @@ dependencies = [
 
 [[package]]
 name = "fileloft-store-s3"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "aws-config",
  "aws-sdk-s3",
