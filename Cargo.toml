@@ -7,6 +7,7 @@ members = [
     "crates/fileloft-axum",
     "crates/fileloft-actix",
     "crates/fileloft-rocket",
+    "crates/fileloft-integration-tests",
 ]
 
 [workspace.package]
@@ -14,12 +15,17 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT"
 rust-version = "1.85"
+repository = "https://github.com/sound-systems/fileloft"
+homepage = "https://github.com/sound-systems/fileloft"
+readme = "README.md"
+keywords = ["tus", "upload", "resumable", "http", "async"]
+categories = ["network-programming", "web-programming"]
 
 [workspace.dependencies]
-# Internal
-fileloft-core         = { path = "crates/fileloft-core" }
-fileloft-store-memory = { path = "crates/fileloft-store-memory" }
-fileloft-store-fs     = { path = "crates/fileloft-store-fs" }
+# Internal (version must track [workspace.package].version for `cargo publish`)
+fileloft-core         = { path = "crates/fileloft-core", version = "0.1.0" }
+fileloft-store-memory = { path = "crates/fileloft-store-memory", version = "0.1.0" }
+fileloft-store-fs     = { path = "crates/fileloft-store-fs", version = "0.1.0" }
 
 # Async
 tokio        = { version = "1.51", features = ["full"] }

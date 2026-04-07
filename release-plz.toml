@@ -1,0 +1,15 @@
+# https://release-plz.dev/docs/config
+# Version bumps follow Conventional Commits (https://www.conventionalcommits.org/):
+# feat → minor, fix → patch, BREAKING CHANGE / ! → major (see Cargo SemVer for Rust).
+
+[workspace]
+repo_url = "https://github.com/sound-systems/fileloft"
+semver_check = true
+pr_labels = ["release"]
+
+[[package]]
+name = "fileloft-integration-tests"
+release = false
+
+[changelog]
+protect_breaking_commits = true

@@ -728,7 +728,6 @@ dependencies = [
  "bytes",
  "chrono",
  "digest 0.11.2",
- "fileloft-store-memory",
  "futures",
  "http 1.4.0",
  "md-5",
@@ -742,6 +741,19 @@ dependencies = [
  "tracing",
  "trait-variant",
  "uuid",
+]
+
+[[package]]
+name = "fileloft-integration-tests"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "bytes",
+ "fileloft-core",
+ "fileloft-store-memory",
+ "http 1.4.0",
+ "sha1 0.11.0",
+ "tokio",
 ]
 
 [[package]]

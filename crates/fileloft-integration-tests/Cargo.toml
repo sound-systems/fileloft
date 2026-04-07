@@ -1,0 +1,16 @@
+[package]
+name = "fileloft-integration-tests"
+description = "Workspace integration tests for fileloft-core (not published)"
+publish = false
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+fileloft-core.workspace         = true
+fileloft-store-memory.workspace = true
+bytes.workspace                 = true
+http.workspace                  = true
+tokio = { workspace = true, features = ["test-util"] }
+base64.workspace                = true
+sha1.workspace                  = true
