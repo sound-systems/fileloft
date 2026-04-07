@@ -4,6 +4,7 @@ members = [
     "crates/fileloft-core",
     "crates/fileloft-store-memory",
     "crates/fileloft-store-fs",
+    "crates/fileloft-store-gcs",
     "crates/fileloft-axum",
     "crates/fileloft-actix",
     "crates/fileloft-rocket",
@@ -26,6 +27,7 @@ categories = ["network-programming", "web-programming"]
 fileloft-core         = { path = "crates/fileloft-core", version = "0.1.0" }
 fileloft-store-memory = { path = "crates/fileloft-store-memory", version = "0.1.0" }
 fileloft-store-fs     = { path = "crates/fileloft-store-fs", version = "0.1.0" }
+fileloft-store-gcs    = { path = "crates/fileloft-store-gcs", version = "0.1.0" }
 
 # Async
 tokio        = { version = "1.51", features = ["full"] }
@@ -67,6 +69,9 @@ tracing = "0.1"
 
 # FS locking
 fs4 = "0.13"
+
+# Cloud storage
+google-cloud-storage = "1.9"
 
 # Framework integrations
 axum      = { version = "0.8", default-features = false, features = ["http1", "tokio", "json"] }
