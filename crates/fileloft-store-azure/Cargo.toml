@@ -1,0 +1,30 @@
+[package]
+name        = "fileloft-store-azure"
+description = "Azure Blob Storage backend for the tus.io resumable upload protocol"
+version.workspace     = true
+edition.workspace     = true
+license.workspace     = true
+rust-version.workspace = true
+readme.workspace      = true
+repository.workspace  = true
+homepage.workspace    = true
+keywords.workspace    = true
+categories.workspace  = true
+documentation = "https://docs.rs/fileloft-store-azure"
+
+[dependencies]
+fileloft-core.workspace   = true
+tokio.workspace           = true
+bytes.workspace           = true
+serde_json.workspace      = true
+serde.workspace           = true
+tracing.workspace         = true
+thiserror.workspace       = true
+futures.workspace         = true
+azure_core.workspace      = true
+azure_storage.workspace   = true
+azure_storage_blobs.workspace = true
+azure_identity.workspace  = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
