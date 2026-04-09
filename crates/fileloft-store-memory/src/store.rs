@@ -7,6 +7,8 @@ use fileloft_core::{
     info::{UploadId, UploadInfo},
     store::{SendDataStore, SendUpload},
 };
+use std::io::Cursor;
+
 use tokio::io::AsyncReadExt;
 use tokio::sync::RwLock;
 
@@ -149,6 +151,18 @@ impl SendUpload for MemoryUpload {
         entry.info.size = Some(length);
         entry.info.size_is_deferred = false;
         Ok(())
+    }
+
+    async fn read_content(&self) -> Result<Box<dyn tokio::io::AsyncRead + Send + Unpin>, TusError> {
+        let state = self.store.read().await;
+        let entry = state
+            .get(self.id.as_str())
+            .ok_or_else(|| TusError::NotFound(self.id.to_string()))?;
+        if !entry.info.is_complete() {
+            return Err(TusError::UploadNotReadyForDownload);
+        }
+        let bytes = bytes::Bytes::copy_from_slice(&entry.data);
+        Ok(Box::new(Cursor::new(bytes)))
     }
 
     async fn concatenate(&mut self, partials: &[UploadInfo]) -> Result<(), TusError> {

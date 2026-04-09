@@ -149,9 +149,7 @@ impl TestHarness {
                     Ok(s) => s.chars().take(2500).collect::<String>(),
                     Err(e) => format!("(could not read page source: {e})"),
                 };
-                panic!(
-                    "timeout waiting for Uppy file input. Page snippet:\n{snippet}"
-                );
+                panic!("timeout waiting for Uppy file input. Page snippet:\n{snippet}");
             }
             tokio::time::sleep(Duration::from_millis(400)).await;
         };

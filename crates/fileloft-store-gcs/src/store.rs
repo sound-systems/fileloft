@@ -10,6 +10,8 @@ use bytes::Bytes;
 use google_cloud_storage::client::{Storage, StorageControl};
 use google_cloud_storage::model::compose_object_request::SourceObject;
 use google_cloud_storage::model::Object;
+use std::io::Cursor;
+
 use tokio::io::AsyncReadExt;
 use tracing::{debug, error, instrument};
 
@@ -380,6 +382,26 @@ impl SendUpload for GcsUpload {
 
     async fn get_info(&self) -> Result<UploadInfo, TusError> {
         self.read_info_object().await
+    }
+
+    async fn read_content(&self) -> Result<Box<dyn tokio::io::AsyncRead + Send + Unpin>, TusError> {
+        let info = self.read_info_object().await?;
+        if !info.is_complete() {
+            return Err(TusError::UploadNotReadyForDownload);
+        }
+        let key = self.data_key();
+        let mut resp = self
+            .storage
+            .read_object(&self.bucket, &key)
+            .send()
+            .await
+            .map_err(|e| gcs_err(e, self.id.as_str(), "read download"))?;
+        let mut buf = Vec::new();
+        while let Some(chunk) = resp.next().await {
+            let chunk = chunk.map_err(|e| TusError::Internal(format!("GCS read download: {e}")))?;
+            buf.extend_from_slice(&chunk);
+        }
+        Ok(Box::new(Cursor::new(buf)))
     }
 
     #[instrument(skip(self), fields(upload_id = %self.id))]

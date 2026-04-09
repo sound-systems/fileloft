@@ -628,6 +628,22 @@ impl SendUpload for S3Upload {
         self.read_info_object().await
     }
 
+    async fn read_content(&self) -> Result<Box<dyn tokio::io::AsyncRead + Send + Unpin>, TusError> {
+        let info = self.read_info_object().await?;
+        if !info.is_complete() {
+            return Err(TusError::UploadNotReadyForDownload);
+        }
+        let resp = self
+            .client
+            .get_object()
+            .bucket(&self.bucket)
+            .key(&self.data_key())
+            .send()
+            .await
+            .map_err(|e| s3_err(e, self.id.as_str(), "get object download"))?;
+        Ok(Box::new(resp.body.into_async_read()))
+    }
+
     #[instrument(skip(self), fields(upload_id = %self.id))]
     async fn finalize(&mut self) -> Result<(), TusError> {
         let parts = self.list_parts().await?;

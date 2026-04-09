@@ -6,6 +6,8 @@
 //! - Parts: `{prefix}{id}_part_{n}` — one blob per PATCH chunk.
 //! - Final: `{prefix}{id}` — block blob built from part blobs on finalize.
 
+use std::io::Cursor;
+
 use azure_core::{request_options::Prefix, Body, StatusCode};
 use azure_identity::create_default_credential;
 use azure_storage::{ConnectionString, StorageCredentials};
@@ -382,6 +384,21 @@ impl SendUpload for AzureUpload {
 
     async fn get_info(&self) -> Result<UploadInfo, TusError> {
         self.read_info_blob().await
+    }
+
+    async fn read_content(&self) -> Result<Box<dyn tokio::io::AsyncRead + Send + Unpin>, TusError> {
+        let info = self.read_info_blob().await?;
+        if !info.is_complete() {
+            return Err(TusError::UploadNotReadyForDownload);
+        }
+        let key = self.data_key();
+        let buf = self
+            .container
+            .blob_client(&key)
+            .get_content()
+            .await
+            .map_err(|e| azure_err(e, self.id.as_str(), "read download"))?;
+        Ok(Box::new(Cursor::new(buf)))
     }
 
     #[instrument(skip(self), fields(upload_id = %self.id))]

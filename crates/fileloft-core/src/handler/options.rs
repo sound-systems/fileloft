@@ -75,19 +75,42 @@ where
         headers.insert(HDR_TUS_MAX_SIZE, crate::util::u64_header(h.config.max_size));
     }
 
-    if h.config.enable_cors {
+    let cors = &h.config.cors;
+    if cors.enabled {
+        let methods = if h.config.enable_download {
+            "OPTIONS,HEAD,GET,POST,PATCH,DELETE"
+        } else {
+            "OPTIONS,HEAD,POST,PATCH,DELETE"
+        };
         headers.insert(
             HDR_ACCESS_CONTROL_ALLOW_METHODS,
-            static_header("OPTIONS,HEAD,POST,PATCH,DELETE"),
+            methods
+                .parse()
+                .map_err(|_| TusError::Internal("bad CORS methods header".into()))?,
         );
+
+        let mut allow = String::from(
+            "Tus-Resumable,Upload-Length,Upload-Offset,Upload-Metadata,\
+             Upload-Defer-Length,Upload-Checksum,Upload-Concat,Content-Type",
+        );
+        for extra in &cors.extra_allow_headers {
+            allow.push(',');
+            allow.push_str(extra.trim());
+        }
         headers.insert(
             HDR_ACCESS_CONTROL_ALLOW_HEADERS,
-            static_header(
-                "Tus-Resumable,Upload-Length,Upload-Offset,Upload-Metadata,\
-                 Upload-Defer-Length,Upload-Checksum,Upload-Concat,Content-Type",
-            ),
+            allow
+                .parse()
+                .map_err(|_| TusError::Internal("bad CORS allow-headers".into()))?,
         );
-        headers.insert(HDR_ACCESS_CONTROL_MAX_AGE, static_header("86400"));
+
+        headers.insert(
+            HDR_ACCESS_CONTROL_MAX_AGE,
+            cors.max_age
+                .to_string()
+                .parse()
+                .map_err(|_| TusError::Internal("bad CORS max-age".into()))?,
+        );
     }
 
     Ok(h.response(StatusCode::NO_CONTENT, headers, bytes::Bytes::new()))

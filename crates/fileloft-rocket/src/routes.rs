@@ -2,12 +2,13 @@ use std::io::Cursor;
 use std::sync::Arc;
 
 use fileloft_core::{
-    handler::{TusHandler, TusRequest, TusResponse},
+    handler::{TusBody, TusHandler, TusRequest, TusResponse},
     lock::SendLocker,
     store::SendDataStore,
 };
 use rocket::data::{Data, ToByteUnit};
 use rocket::http::{Header, Method, Status};
+use rocket::response::stream::ReaderStream;
 use rocket::response::Response;
 use rocket::route::{Handler, Outcome, Route};
 use rocket::tokio::io::AsyncReadExt;
@@ -23,6 +24,7 @@ where
     let methods = [
         Method::Options,
         Method::Head,
+        Method::Get,
         Method::Post,
         Method::Patch,
         Method::Delete,
@@ -76,7 +78,7 @@ where
 
     let body = if matches!(
         req.method(),
-        Method::Head | Method::Delete | Method::Options
+        Method::Head | Method::Delete | Method::Options | Method::Get
     ) {
         None
     } else {
@@ -152,7 +154,14 @@ fn rocket_response<'r>(tus: TusResponse) -> Result<Response<'r>, Status> {
         let value = String::from_utf8_lossy(&val).into_owned();
         builder.header(Header::new(name, value));
     }
-    let body = tus.body.to_vec();
-    builder.sized_body(body.len(), Cursor::new(body));
+    match tus.body {
+        TusBody::Bytes(b) => {
+            let body = b.to_vec();
+            builder.sized_body(body.len(), Cursor::new(body));
+        }
+        TusBody::Reader(r) => {
+            builder.streamed_body(ReaderStream::one(r));
+        }
+    }
     Ok(builder.finalize())
 }

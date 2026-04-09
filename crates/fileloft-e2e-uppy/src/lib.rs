@@ -16,7 +16,7 @@ use axum::routing::get;
 use axum::Router;
 use bytes::Bytes;
 use fileloft_axum::tus_router;
-use fileloft_core::config::Config;
+use fileloft_core::config::{Config, CorsConfig};
 use fileloft_core::handler::TusHandler;
 use fileloft_store_fs::{FileLocker, FileStore};
 use tokio::net::TcpListener;
@@ -73,7 +73,10 @@ pub async fn start_server(
     let locker = FileLocker::new(lock_dir);
 
     let config = Config {
-        enable_cors: true,
+        cors: CorsConfig {
+            enabled: true,
+            ..Default::default()
+        },
         base_path: "/files/".to_string(),
         ..Default::default()
     };

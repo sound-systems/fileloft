@@ -131,7 +131,7 @@ async fn patch_with_valid_sha1_checksum() {
         resp.status.as_u16(),
         204,
         "body: {}",
-        String::from_utf8_lossy(&resp.body)
+        String::from_utf8_lossy(resp.bytes_slice().unwrap_or(&[]))
     );
 }
 

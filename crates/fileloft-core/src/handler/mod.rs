@@ -1,4 +1,5 @@
 mod delete;
+mod get;
 mod head;
 mod options;
 mod patch;
@@ -15,10 +16,28 @@ use crate::{
     error::TusError,
     hooks::{HookEvent, HookSender},
     lock::SendLocker,
-    proto::{HDR_CACHE_CONTROL, HDR_TUS_RESUMABLE, TUS_VERSION},
+    proto::{
+        HDR_ACCESS_CONTROL_ALLOW_CREDENTIALS, HDR_CACHE_CONTROL, HDR_TUS_RESUMABLE, TUS_VERSION,
+    },
     store::SendDataStore,
     util::static_header,
 };
+
+/// Response body: small protocol messages or a streamed download.
+pub enum TusBody {
+    Bytes(Bytes),
+    /// Streamed body (e.g. GET download). Framework layers map this to a streaming HTTP body.
+    Reader(Box<dyn tokio::io::AsyncRead + Send + Unpin>),
+}
+
+impl std::fmt::Debug for TusBody {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Bytes(b) => f.debug_tuple("Bytes").field(b).finish(),
+            Self::Reader(_) => f.write_str("Reader(..)"),
+        }
+    }
+}
 
 /// Incoming request as seen by the tus handler.
 /// Framework integrations construct this from their native request type.
@@ -26,10 +45,10 @@ pub struct TusRequest {
     pub method: Method,
     pub uri: Uri,
     /// Upload ID extracted from the URL path by the framework router.
-    /// Present for HEAD / PATCH / DELETE; absent for OPTIONS and POST.
+    /// Present for HEAD / PATCH / DELETE / GET; absent for OPTIONS and POST.
     pub upload_id: Option<String>,
     pub headers: HeaderMap,
-    /// Streaming body. `None` for HEAD / DELETE / OPTIONS.
+    /// Streaming body. `None` for HEAD / DELETE / OPTIONS / GET.
     pub body: Option<Box<dyn tokio::io::AsyncRead + Send + Sync + Unpin>>,
 }
 
@@ -38,8 +57,17 @@ pub struct TusRequest {
 pub struct TusResponse {
     pub status: StatusCode,
     pub headers: HeaderMap,
-    /// Body bytes — always small for tus (empty or short error text).
-    pub body: Bytes,
+    pub body: TusBody,
+}
+
+impl TusResponse {
+    /// When the body is [`TusBody::Bytes`], returns its slice (for tests and small responses).
+    pub fn bytes_slice(&self) -> Option<&[u8]> {
+        match &self.body {
+            TusBody::Bytes(b) => Some(b.as_ref()),
+            TusBody::Reader(_) => None,
+        }
+    }
 }
 
 /// The central tus protocol handler.
@@ -87,6 +115,7 @@ where
         let result = match req.method {
             Method::OPTIONS => options::handle(self, &req).await,
             Method::HEAD => head::handle(self, &req).await,
+            Method::GET => get::handle(self, &req).await,
             Method::POST => post::handle(self, req).await,
             Method::PATCH => patch::handle(self, req).await,
             Method::DELETE => delete::handle(self, &req).await,
@@ -104,6 +133,15 @@ where
         status: StatusCode,
         extra_headers: HeaderMap,
         body: Bytes,
+    ) -> TusResponse {
+        self.response_with_body(status, extra_headers, TusBody::Bytes(body))
+    }
+
+    pub(crate) fn response_with_body(
+        &self,
+        status: StatusCode,
+        extra_headers: HeaderMap,
+        body: TusBody,
     ) -> TusResponse {
         let mut headers = self.base_headers();
         headers.extend(extra_headers);
@@ -126,7 +164,7 @@ where
         TusResponse {
             status,
             headers,
-            body,
+            body: TusBody::Bytes(body),
         }
     }
 
@@ -135,19 +173,26 @@ where
         let mut h = HeaderMap::new();
         h.insert(HDR_TUS_RESUMABLE, static_header(TUS_VERSION));
         h.insert(HDR_CACHE_CONTROL, static_header("no-store"));
-        if self.config.enable_cors {
-            h.insert(
-                crate::proto::HDR_ACCESS_CONTROL_ALLOW_ORIGIN,
-                static_header("*"),
+        let cors = &self.config.cors;
+        if cors.enabled {
+            if let Ok(v) = HeaderValue::from_str(&cors.allow_origin) {
+                h.insert(crate::proto::HDR_ACCESS_CONTROL_ALLOW_ORIGIN, v);
+            }
+            if cors.allow_credentials {
+                h.insert(HDR_ACCESS_CONTROL_ALLOW_CREDENTIALS, static_header("true"));
+            }
+            let mut expose = String::from(
+                "Upload-Offset,Upload-Length,Upload-Metadata,Upload-Expires,\
+                 Upload-Defer-Length,Location,Tus-Resumable,Tus-Version,Tus-Extension,\
+                 Tus-Max-Size,Tus-Checksum-Algorithm,Content-Length,Content-Type",
             );
-            h.insert(
-                crate::proto::HDR_ACCESS_CONTROL_EXPOSE_HEADERS,
-                static_header(
-                    "Upload-Offset,Upload-Length,Upload-Metadata,Upload-Expires,\
-                     Upload-Defer-Length,Location,Tus-Resumable,Tus-Version,Tus-Extension,\
-                     Tus-Max-Size,Tus-Checksum-Algorithm",
-                ),
-            );
+            for extra in &cors.extra_expose_headers {
+                expose.push(',');
+                expose.push_str(extra.trim());
+            }
+            if let Ok(v) = expose.parse() {
+                h.insert(crate::proto::HDR_ACCESS_CONTROL_EXPOSE_HEADERS, v);
+            }
         }
         h
     }

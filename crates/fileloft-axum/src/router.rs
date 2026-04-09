@@ -9,11 +9,12 @@ use axum::{
     Router,
 };
 use fileloft_core::{
-    handler::{TusHandler, TusRequest, TusResponse},
+    handler::{TusBody, TusHandler, TusRequest, TusResponse},
     lock::SendLocker,
     store::SendDataStore,
 };
 use http_body_util::BodyExt;
+use tokio_util::io::ReaderStream;
 
 /// Mount with [`Router::nest`], e.g. `.nest("/files", tus_router(handler))`.
 pub fn tus_router<S, L>(handler: Arc<TusHandler<S, L>>) -> Router
@@ -56,7 +57,7 @@ where
 
     let body = if matches!(
         method,
-        http::Method::HEAD | http::Method::DELETE | http::Method::OPTIONS
+        http::Method::HEAD | http::Method::DELETE | http::Method::OPTIONS | http::Method::GET
     ) {
         None
     } else {
@@ -87,7 +88,13 @@ where
 }
 
 fn map_response(tus: TusResponse) -> Response<Body> {
-    let mut res = Response::new(Body::from(tus.body));
+    let mut res = match tus.body {
+        TusBody::Bytes(b) => Response::new(Body::from(b)),
+        TusBody::Reader(r) => {
+            let stream = ReaderStream::new(r);
+            Response::new(Body::from_stream(stream))
+        }
+    };
     *res.status_mut() = tus.status;
     res.headers_mut().extend(tus.headers);
     res

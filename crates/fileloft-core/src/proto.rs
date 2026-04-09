@@ -22,6 +22,7 @@ pub const HDR_ACCESS_CONTROL_ALLOW_METHODS: &str = "Access-Control-Allow-Methods
 pub const HDR_ACCESS_CONTROL_ALLOW_HEADERS: &str = "Access-Control-Allow-Headers";
 pub const HDR_ACCESS_CONTROL_EXPOSE_HEADERS: &str = "Access-Control-Expose-Headers";
 pub const HDR_ACCESS_CONTROL_MAX_AGE: &str = "Access-Control-Max-Age";
+pub const HDR_ACCESS_CONTROL_ALLOW_CREDENTIALS: &str = "Access-Control-Allow-Credentials";
 
 pub const CONTENT_TYPE_OCTET_STREAM: &str = "application/offset+octet-stream";
 pub const CACHE_CONTROL_NO_STORE: &str = "no-store";

@@ -61,7 +61,7 @@ async fn concatenation_assembles_partials() {
         post_final.status.as_u16(),
         201,
         "final concat failed: {}",
-        String::from_utf8_lossy(&post_final.body)
+        String::from_utf8_lossy(post_final.bytes_slice().unwrap_or(&[]))
     );
 
     let final_id = id_from_response(&post_final);

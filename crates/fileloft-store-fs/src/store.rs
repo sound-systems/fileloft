@@ -301,6 +301,19 @@ impl SendUpload for FileUpload {
         self.write_info(&info).await
     }
 
+    async fn read_content(&self) -> Result<Box<dyn tokio::io::AsyncRead + Send + Unpin>, TusError> {
+        let info = self.read_info().await?;
+        if !info.is_complete() {
+            return Err(TusError::UploadNotReadyForDownload);
+        }
+        let path = self.data_path();
+        if !tokio::fs::try_exists(&path).await.map_err(TusError::Io)? {
+            return Err(TusError::UploadNotReadyForDownload);
+        }
+        let file = tokio::fs::File::open(&path).await.map_err(TusError::Io)?;
+        Ok(Box::new(file))
+    }
+
     async fn concatenate(&mut self, partials: &[UploadInfo]) -> Result<(), TusError> {
         let dest = self.data_path();
         if let Some(parent) = dest.parent() {

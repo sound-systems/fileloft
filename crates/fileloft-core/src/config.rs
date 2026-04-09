@@ -2,6 +2,36 @@ use std::time::Duration;
 
 use crate::hooks::HookConfig;
 
+/// Cross-origin resource sharing settings (tus clients in browsers).
+#[derive(Debug, Clone)]
+pub struct CorsConfig {
+    /// When false, no CORS headers are added.
+    pub enabled: bool,
+    /// `Access-Control-Allow-Origin` value (e.g. `"*"` or `"https://example.com"`).
+    pub allow_origin: String,
+    /// `Access-Control-Allow-Credentials`.
+    pub allow_credentials: bool,
+    /// Extra header names merged into `Access-Control-Allow-Headers` (tus defaults are always included).
+    pub extra_allow_headers: Vec<String>,
+    /// Extra header names merged into `Access-Control-Expose-Headers` (tus defaults are always included).
+    pub extra_expose_headers: Vec<String>,
+    /// `Access-Control-Max-Age` for preflight (seconds).
+    pub max_age: u64,
+}
+
+impl Default for CorsConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            allow_origin: "*".to_string(),
+            allow_credentials: false,
+            extra_allow_headers: Vec::new(),
+            extra_expose_headers: Vec::new(),
+            max_age: 86400,
+        }
+    }
+}
+
 /// Runtime flags controlling which tus protocol extensions are active.
 ///
 /// These are runtime config, not Cargo features, so one compiled binary can
@@ -62,14 +92,17 @@ pub struct Config {
     pub extensions: Extensions,
     /// How long to wait when acquiring a per-upload lock before returning 408.
     pub lock_timeout: Duration,
-    /// Add permissive CORS headers to every response.
-    pub enable_cors: bool,
+    /// CORS headers on responses.
+    pub cors: CorsConfig,
     /// When `base_url` is unset, use `X-Forwarded-Proto` / `X-Forwarded-Host` to build absolute
     /// URLs (e.g. behind TLS termination). **Only enable when this service is not directly exposed
     /// to untrusted clients** (forwarded headers can be spoofed).
     pub trust_forwarded_headers: bool,
     /// Hook callbacks and event-channel configuration.
     pub hooks: HookConfig,
+    /// Allow HTTP GET on upload URLs to download completed data (tus-style downloads).
+    /// When `false`, GET returns 405.
+    pub enable_download: bool,
 }
 
 impl Default for Config {
@@ -80,9 +113,10 @@ impl Default for Config {
             max_size: 0,
             extensions: Extensions::default(),
             lock_timeout: Duration::from_secs(20),
-            enable_cors: false,
+            cors: CorsConfig::default(),
             trust_forwarded_headers: false,
             hooks: HookConfig::default(),
+            enable_download: false,
         }
     }
 }

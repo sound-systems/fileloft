@@ -6,11 +6,12 @@ use actix_web::http::{Method, StatusCode};
 use actix_web::web::{self};
 use actix_web::{HttpRequest, HttpResponse};
 use fileloft_core::{
-    handler::{TusHandler, TusRequest, TusResponse},
+    handler::{TusBody, TusHandler, TusRequest, TusResponse},
     lock::SendLocker,
     store::SendDataStore,
 };
 use futures_util::StreamExt;
+use tokio_util::io::ReaderStream;
 
 /// Register with `App::new().app_data(handler).service(tus_scope::<S,L>())`.
 pub fn tus_scope<S, L>() -> actix_web::Scope
@@ -70,7 +71,7 @@ where
 
     let body = if matches!(
         req.method(),
-        &Method::HEAD | &Method::DELETE | &Method::OPTIONS
+        &Method::HEAD | &Method::DELETE | &Method::OPTIONS | &Method::GET
     ) {
         None
     } else {
@@ -131,5 +132,13 @@ fn map_response(tus: TusResponse) -> HttpResponse {
             res.insert_header((name, val));
         }
     }
-    res.body(tus.body)
+    match tus.body {
+        TusBody::Bytes(b) => res.body(b),
+        TusBody::Reader(r) => {
+            let stream = ReaderStream::new(r).map(|item| {
+                item.map_err(|e| actix_web::error::ErrorInternalServerError(e.to_string()))
+            });
+            res.streaming(stream)
+        }
+    }
 }

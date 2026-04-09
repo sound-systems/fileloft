@@ -107,13 +107,37 @@ docker run --rm \
   ghcr.io/sound-systems/fileloft:azure
 ```
 
-All variants share these common environment variables:
+All variants share these common environment variables (see also [tusd-style configuration](https://tus.github.io/tusd/getting-started/configuration/)):
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `FILELOFT_BIND` | `0.0.0.0:8080` | Address the HTTP server binds to. |
-| `FILELOFT_MAX_SIZE` | _unset_ | Maximum allowed upload size, in bytes. |
+| `FILELOFT_BIND` | `0.0.0.0:8080` | TCP address when not using `FILELOFT_UNIX_SOCKET` or TLS-only paths. |
+| `FILELOFT_UNIX_SOCKET` | _unset_ | Unix domain socket path (Unix only; mutually exclusive with TLS bind below). |
+| `FILELOFT_MAX_SIZE` | _unset_ | Maximum allowed upload size, in bytes (`0` = unlimited). |
 | `FILELOFT_BASE_PATH` | `/files/` | Path the tus endpoints are mounted under. |
+| `FILELOFT_BASE_URL` | _unset_ | Absolute base URL for `Location` when it cannot be inferred from the request. |
+| `FILELOFT_BEHIND_PROXY` | `false` | Trust `X-Forwarded-*` when building URLs (set when behind a reverse proxy). |
+| `FILELOFT_LOCK_TIMEOUT` | `20` | Lock wait timeout (seconds) before `408`. |
+| `FILELOFT_SHUTDOWN_TIMEOUT` | `10` | Graceful shutdown window for the **TLS** server path (`axum-server`); plain TCP uses Axum’s default graceful stop. |
+| `FILELOFT_DISABLE_CORS` | `false` | Disable CORS headers entirely. |
+| `FILELOFT_CORS_ALLOW_ORIGIN` | `*` | `Access-Control-Allow-Origin`. |
+| `FILELOFT_CORS_ALLOW_CREDENTIALS` | `false` | `Access-Control-Allow-Credentials`. |
+| `FILELOFT_CORS_ALLOW_HEADERS` | _empty_ | Extra comma-separated names merged into preflight allow-headers. |
+| `FILELOFT_CORS_EXPOSE_HEADERS` | _empty_ | Extra comma-separated names merged into expose-headers. |
+| `FILELOFT_CORS_MAX_AGE` | `86400` | Preflight `Access-Control-Max-Age` (seconds). |
+| `FILELOFT_DISABLE_TERMINATION` | `false` | Disable the termination extension (no `DELETE`). |
+| `FILELOFT_ENABLE_DOWNLOAD` | `false` | Allow `GET` on upload URLs to download completed data. |
+| `FILELOFT_ENABLE_CONCATENATION` | `false` | Enable concatenation extension. |
+| `FILELOFT_ENABLE_CLEANUP_CONCAT_PARTIALS` | `false` | Delete partials after successful final concat. |
+| `FILELOFT_ENABLE_EXPIRATION` | `false` | Enable expiration extension. |
+| `FILELOFT_EXPIRATION_TTL` | _unset_ | TTL for incomplete uploads (seconds) when expiration is on. |
+| `FILELOFT_DISABLE_CHECKSUM` | `false` | Disable checksum extension. |
+| `FILELOFT_DISABLE_CREATION` | `false` | Disable creation (POST). |
+| `FILELOFT_DISABLE_CREATION_WITH_UPLOAD` | `false` | Disable creation-with-upload. |
+| `FILELOFT_DISABLE_DEFER_LENGTH` | `false` | Disable defer-length. |
+| `FILELOFT_TLS_CERT` / `FILELOFT_TLS_KEY` | _unset_ | PEM paths for HTTPS; when both are set, the server listens with TLS on `FILELOFT_BIND`. |
+| `FILELOFT_TLS_MODE` | `tls12` | Reserved for future Rustls cipher/protocol tuning (currently logs a warning if not `tls12`). |
+| `FILELOFT_ENABLE_H2C` | `false` | When `true`, logs that HTTP/2 is available (workspace `axum` is built with `http2`). |
 
 See the docs site for the full per-backend configuration reference.
 

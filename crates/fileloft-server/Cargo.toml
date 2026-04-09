@@ -27,6 +27,7 @@ backend-azure = ["dep:fileloft-store-azure"]
 fileloft-core.workspace  = true
 fileloft-axum.workspace  = true
 axum.workspace           = true
+axum-server              = { version = "0.8", features = ["tls-rustls"] }
 tokio.workspace          = true
 tracing.workspace        = true
 tracing-subscriber.workspace = true

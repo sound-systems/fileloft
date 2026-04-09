@@ -31,6 +31,10 @@ pub trait Upload {
     /// Assemble fully-uploaded partials (in order) into this final upload.
     /// Called by the concatenation extension.
     async fn concatenate(&mut self, partials: &[UploadInfo]) -> Result<(), TusError>;
+
+    /// Stream the completed upload bytes for HTTP GET (download) requests.
+    /// Return [`TusError::UploadNotReadyForDownload`] when the upload is incomplete or not readable.
+    async fn read_content(&self) -> Result<Box<dyn tokio::io::AsyncRead + Send + Unpin>, TusError>;
 }
 
 /// Core storage abstraction.
