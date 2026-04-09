@@ -134,6 +134,25 @@ A `201 Created` response with a `Location` header indicates the endpoint is read
 cargo test --workspace
 ```
 
+The repository includes a **Makefile** for common tasks (`make help` lists targets). Useful shortcuts:
+
+| Target | Purpose |
+| --- | --- |
+| `make setup` | Fetch Rust crates and install npm deps for the e2e Uppy bundle |
+| `make test-unit` | Unit tests only (excludes integration, e2e, and server crates) |
+| `make test-integration` | `fileloft-integration-tests` |
+| `make test-e2e` | Browser e2e tests (see below) |
+| `make test-all` | Unit, then integration, then e2e |
+| `make e2e-server` | Build assets and run the Uppy + tus demo at [http://localhost:3000](http://localhost:3000) for manual checks |
+
+#### End-to-end (browser) tests
+
+The `fileloft-e2e-uppy` crate runs **ignored** tests that drive headless Chrome via **ChromeDriver**. You need [Google Chrome](https://www.google.com/chrome/) and a **ChromeDriver whose major version matches Chrome** (mismatches fail with a session error).
+
+From the repo root, **`make test-e2e`** is the recommended entry point: it builds the vendored Uppy assets, then starts ChromeDriver on port **9515** if nothing is already listening on that port, and runs the tests. If you prefer to run ChromeDriver yourself, start it (`chromedriver --port=9515`) and run `cargo test -p fileloft-e2e-uppy -- --ignored`; set `WEBDRIVER_URL` if you use another address.
+
+Details, asset rebuild, and macOS notes: [`crates/fileloft-e2e-uppy/README.md`](crates/fileloft-e2e-uppy/README.md).
+
 The [Hugo](https://gohugo.io/) documentation site lives under `docs-site`; build it with:
 
 ```bash

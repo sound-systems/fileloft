@@ -8,8 +8,10 @@ ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 E2E_CRATE := $(ROOT)crates/fileloft-e2e-uppy
 
 IMAGE ?= ghcr.io/sound-systems/fileloft
+# Used by test-e2e (scripts/run-e2e-tests.sh); override e.g. CHROMEDRIVER_PORT=4444 make test-e2e
+CHROMEDRIVER_PORT ?= 9515
 
-.PHONY: help setup e2e-assets test-unit test-integration test-e2e test-all \
+.PHONY: help setup e2e-assets e2e-server test-unit test-integration test-e2e test-all \
 	docker-build-fs docker-build-s3 docker-build-gcs docker-build-azure docker-build-all
 
 help: ## Show available targets and what they do
@@ -27,6 +29,9 @@ setup: ## Fetch Rust deps and install npm packages for the e2e Uppy asset bundle
 e2e-assets: ## Install npm deps and build vendored Uppy bundle (static/vendor/uppy-e2e.js)
 	cd "$(E2E_CRATE)" && npm ci && npm run build
 
+e2e-server: e2e-assets ## Build assets and start the Uppy + tus demo server on http://localhost:3000
+	cargo run --manifest-path "$(ROOT)Cargo.toml" -p fileloft-e2e-uppy
+
 test-unit: ## Run library/unit tests (workspace crates except integration + e2e + server packages)
 	cargo test --manifest-path "$(ROOT)Cargo.toml" --workspace \
 		--exclude fileloft-integration-tests --exclude fileloft-e2e-uppy --exclude fileloft-server
@@ -34,8 +39,8 @@ test-unit: ## Run library/unit tests (workspace crates except integration + e2e 
 test-integration: ## Run workspace integration tests (fileloft-integration-tests)
 	cargo test --manifest-path "$(ROOT)Cargo.toml" -p fileloft-integration-tests
 
-test-e2e: e2e-assets ## Run headless browser e2e tests (requires Chrome + matching chromedriver, e.g. port 9515)
-	cargo test --manifest-path "$(ROOT)Cargo.toml" -p fileloft-e2e-uppy -- --ignored
+test-e2e: e2e-assets ## Run headless e2e tests (starts chromedriver if port free; needs Chrome installed)
+	CHROMEDRIVER_PORT="$(CHROMEDRIVER_PORT)" WEBDRIVER_URL="$(WEBDRIVER_URL)" "$(ROOT)scripts/run-e2e-tests.sh"
 
 test-all: test-unit test-integration test-e2e ## Run unit, then integration, then e2e tests
 
