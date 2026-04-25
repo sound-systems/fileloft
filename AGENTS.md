@@ -73,4 +73,4 @@ The `fileloft-e2e-uppy` crate vendors a browser bundle under `static/vendor/` so
 
 ## Container image
 
-The repository includes a `Dockerfile` at the root and `Makefile` targets for building per-backend images. The `BACKEND` build arg (`fs`, `s3`, `gcs`, `azure`) selects which Cargo feature is compiled into the binary. Images are published to `ghcr.io/sound-systems/fileloft` with tag suffixes matching the backend name (`:latest` / `:fs`, `:s3`, `:gcs`, `:azure`).
+The repository includes a `Dockerfile` at the root and `Makefile` targets for building per-backend images. The `BACKEND` build arg (`fs`, `s3`, `gcs`, `azure`) selects which Cargo feature is compiled into the binary. Images are published to `docker.io/soundsystems/fileloft` with tag suffixes matching the backend name (`:latest` / `:fs`, `:s3`, `:gcs`, `:azure`) plus immutable release tags (`:X.Y.Z`, `:X.Y.Z-fs`, `:X.Y.Z-s3`, `:X.Y.Z-gcs`, `:X.Y.Z-azure`). Runtime images use `debian:trixie-slim`.

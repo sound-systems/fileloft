@@ -11,25 +11,43 @@
 ARG BACKEND=fs
 
 # ---------------------------------------------------------------------------
+# Base with cargo-chef
+# ---------------------------------------------------------------------------
+FROM lukemathwalker/cargo-chef:latest-rust-1.95-slim-trixie AS chef
+
+WORKDIR /build
+
+# ---------------------------------------------------------------------------
+# Dependency planning
+# ---------------------------------------------------------------------------
+FROM chef AS planner
+
+COPY . .
+RUN cargo chef prepare --recipe-path recipe.json
+
+# ---------------------------------------------------------------------------
 # Builder
 # ---------------------------------------------------------------------------
-FROM rust:1.85-slim-bookworm AS builder
+FROM chef AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         pkg-config libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /build
-COPY . .
-
 ARG BACKEND
+COPY --from=planner /build/recipe.json recipe.json
+
+RUN cargo chef cook --release --recipe-path recipe.json \
+        -p fileloft-server --no-default-features --features "backend-${BACKEND}"
+
+COPY . .
 RUN cargo build --release -p fileloft-server \
         --no-default-features --features "backend-${BACKEND}"
 
 # ---------------------------------------------------------------------------
 # Runtime
 # ---------------------------------------------------------------------------
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates \
