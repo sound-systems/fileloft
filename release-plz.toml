@@ -6,6 +6,12 @@
 repo_url = "https://github.com/sound-systems/fileloft"
 semver_check = true
 pr_labels = ["release"]
+release_always = false
+
+[[package]]
+name = "fileloft-server"
+git_only = true
+git_tag_name = "fileloft-server-v{{ version }}"
 
 [[package]]
 name = "fileloft-integration-tests"

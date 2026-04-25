@@ -1,4 +1,4 @@
-# Publishes workspace crates to crates.io using release-plz (semantic versioning via Conventional Commits).
+# Publishes workspace crates to crates.io using release-plz after CI passes.
 #
 # Repository setup (one-time):
 # - Settings → Actions → General → Workflow permissions: Read and write, and allow creating PRs.
@@ -6,20 +6,25 @@
 # - Repository secret: RELEASE_PLZ_TOKEN (fine-grained PAT with contents: write)
 #   so release-created tags can trigger downstream Docker workflows.
 #   https://release-plz.dev/docs/github/quickstart
-# - Optional: restrict the `if:` below to your org/repo if you fork.
+# - This workflow is chained from CI via workflow_run so publish/tag creation only
+#   runs for tested pushes to main. PR CI completions are ignored by job-level filters.
 
 name: Release-plz
 
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
 
 jobs:
   release-plz-release:
     name: Publish to crates.io
     runs-on: ubuntu-latest
-    if: github.repository == 'sound-systems/fileloft'
+    if: >
+      github.repository == 'sound-systems/fileloft' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
     permissions:
       contents: write
       pull-requests: read
@@ -27,6 +32,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
+          ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
           token: ${{ secrets.RELEASE_PLZ_TOKEN }}
       - name: Install Rust toolchain
@@ -42,17 +48,22 @@ jobs:
   release-plz-pr:
     name: Open release PR (versions + changelog)
     runs-on: ubuntu-latest
-    if: github.repository == 'sound-systems/fileloft'
+    if: >
+      github.repository == 'sound-systems/fileloft' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
     permissions:
       contents: write
       pull-requests: write
     concurrency:
-      group: release-plz-${{ github.ref }}
+      group: release-plz-${{ github.event.workflow_run.head_branch }}
       cancel-in-progress: false
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
+          ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
           token: ${{ secrets.RELEASE_PLZ_TOKEN }}
       - name: Install Rust toolchain
