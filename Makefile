@@ -7,7 +7,7 @@
 ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 E2E_CRATE := $(ROOT)crates/fileloft-e2e-uppy
 
-IMAGE ?= ghcr.io/sound-systems/fileloft
+IMAGE ?= docker.io/soundsystems/fileloft
 # Used by test-e2e (scripts/run-e2e-tests.sh); override e.g. CHROMEDRIVER_PORT=4444 make test-e2e
 CHROMEDRIVER_PORT ?= 9515
 

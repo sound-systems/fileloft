@@ -60,10 +60,10 @@ A separate image variant is published for each storage backend. The default
 
 | Tag | Backend | Example |
 | --- | --- | --- |
-| `latest`, `fs` | Filesystem | `ghcr.io/sound-systems/fileloft:latest` |
-| `s3` | Amazon S3 / S3-compatible | `ghcr.io/sound-systems/fileloft:s3` |
-| `gcs` | Google Cloud Storage | `ghcr.io/sound-systems/fileloft:gcs` |
-| `azure` | Azure Blob Storage | `ghcr.io/sound-systems/fileloft:azure` |
+| `latest`, `fs`, `X.Y.Z`, `X.Y.Z-fs` | Filesystem | `docker.io/soundsystems/fileloft:latest` |
+| `s3`, `X.Y.Z-s3` | Amazon S3 / S3-compatible | `docker.io/soundsystems/fileloft:s3` |
+| `gcs`, `X.Y.Z-gcs` | Google Cloud Storage | `docker.io/soundsystems/fileloft:gcs` |
+| `azure`, `X.Y.Z-azure` | Azure Blob Storage | `docker.io/soundsystems/fileloft:azure` |
 
 **Filesystem (default):**
 
@@ -71,7 +71,7 @@ A separate image variant is published for each storage backend. The default
 docker run --rm \
   -p 8080:8080 \
   -v fileloft-data:/var/lib/fileloft \
-  ghcr.io/sound-systems/fileloft:latest
+  docker.io/soundsystems/fileloft:latest
 ```
 
 **S3:**
@@ -83,7 +83,7 @@ docker run --rm \
   -e AWS_ACCESS_KEY_ID \
   -e AWS_SECRET_ACCESS_KEY \
   -e AWS_REGION=us-east-1 \
-  ghcr.io/sound-systems/fileloft:s3
+  docker.io/soundsystems/fileloft:s3
 ```
 
 **GCS:**
@@ -94,7 +94,7 @@ docker run --rm \
   -e FILELOFT_GCS_BUCKET=my-uploads \
   -v /path/to/keyfile.json:/credentials.json:ro \
   -e GOOGLE_APPLICATION_CREDENTIALS=/credentials.json \
-  ghcr.io/sound-systems/fileloft:gcs
+  docker.io/soundsystems/fileloft:gcs
 ```
 
 **Azure:**
@@ -104,7 +104,7 @@ docker run --rm \
   -p 8080:8080 \
   -e FILELOFT_AZURE_CONTAINER=my-uploads \
   -e AZURE_STORAGE_CONNECTION_STRING \
-  ghcr.io/sound-systems/fileloft:azure
+  docker.io/soundsystems/fileloft:azure
 ```
 
 All variants share these common environment variables (see also [tusd-style configuration](https://tus.github.io/tusd/getting-started/configuration/)):

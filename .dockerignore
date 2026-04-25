@@ -1,0 +1,7 @@
+.git/
+.github/
+target/
+**/node_modules/
+docs-site/
+crates/fileloft-e2e-uppy/static/vendor/
+*.md

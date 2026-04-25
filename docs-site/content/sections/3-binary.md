@@ -12,12 +12,12 @@ published for each storage backend.
 
 | Tag | Backend | Base |
 | --- | --- | --- |
-| `latest`, `fs` | Local filesystem | `debian:bookworm-slim` |
-| `s3` | Amazon S3 / S3-compatible (MinIO, R2, …) | `debian:bookworm-slim` |
-| `gcs` | Google Cloud Storage | `debian:bookworm-slim` |
-| `azure` | Azure Blob Storage | `debian:bookworm-slim` |
+| `latest`, `fs`, `X.Y.Z`, `X.Y.Z-fs` | Local filesystem | `debian:trixie-slim` |
+| `s3`, `X.Y.Z-s3` | Amazon S3 / S3-compatible (MinIO, R2, …) | `debian:trixie-slim` |
+| `gcs`, `X.Y.Z-gcs` | Google Cloud Storage | `debian:trixie-slim` |
+| `azure`, `X.Y.Z-azure` | Azure Blob Storage | `debian:trixie-slim` |
 
-All images are available from `ghcr.io/sound-systems/fileloft`.
+All images are available from `docker.io/soundsystems/fileloft`.
 
 ### Common configuration
 
@@ -38,7 +38,7 @@ Every variant reads these environment variables:
 docker run --rm \
   -p 8080:8080 \
   -v fileloft-data:/var/lib/fileloft \
-  ghcr.io/sound-systems/fileloft:latest
+  docker.io/soundsystems/fileloft:latest
 ```
 
 The server stores uploads under `/var/lib/fileloft`. Mount a volume or host
@@ -59,7 +59,7 @@ docker run --rm \
   -e AWS_ACCESS_KEY_ID \
   -e AWS_SECRET_ACCESS_KEY \
   -e AWS_REGION=us-east-1 \
-  ghcr.io/sound-systems/fileloft:s3
+  docker.io/soundsystems/fileloft:s3
 ```
 
 Authentication uses the standard AWS SDK credential chain: environment
@@ -86,7 +86,7 @@ docker run --rm \
   -e FILELOFT_GCS_BUCKET=my-uploads \
   -v /path/to/keyfile.json:/credentials.json:ro \
   -e GOOGLE_APPLICATION_CREDENTIALS=/credentials.json \
-  ghcr.io/sound-systems/fileloft:gcs
+  docker.io/soundsystems/fileloft:gcs
 ```
 
 Authentication uses Application Default Credentials. On GCE/GKE the attached
@@ -107,7 +107,7 @@ docker run --rm \
   -p 8080:8080 \
   -e FILELOFT_AZURE_CONTAINER=my-uploads \
   -e AZURE_STORAGE_CONNECTION_STRING \
-  ghcr.io/sound-systems/fileloft:azure
+  docker.io/soundsystems/fileloft:azure
 ```
 
 The Azure image supports two authentication modes:
