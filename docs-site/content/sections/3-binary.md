@@ -1,8 +1,8 @@
 ---
-
-## title: "Run as a standalone binary"
+title: "Run as a standalone binary"
 slug: "binary"
 weight: 3
+---
 
 If you do not need to embed fileloft in an existing Rust service, you can run
 the prebuilt binary as a self-contained tus server. A separate Docker image is
