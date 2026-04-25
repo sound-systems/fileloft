@@ -10,6 +10,8 @@ release_always = false
 
 [[package]]
 name = "fileloft-server"
+# Must match `publish` in `crates/fileloft-server/Cargo.toml` (release-only tags, not crates.io)
+publish = false
 git_only = true
 git_tag_name = "fileloft-server-v{{ version }}"
 

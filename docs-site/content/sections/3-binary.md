@@ -1,8 +1,8 @@
 ---
-title: "Run as a standalone binary"
+
+## title: "Run as a standalone binary"
 slug: "binary"
 weight: 3
----
 
 If you do not need to embed fileloft in an existing Rust service, you can run
 the prebuilt binary as a self-contained tus server. A separate Docker image is
@@ -10,12 +10,14 @@ published for each storage backend.
 
 ### Image variants
 
-| Tag | Backend | Base |
-| --- | --- | --- |
-| `latest`, `fs`, `X.Y.Z`, `X.Y.Z-fs` | Local filesystem | `debian:trixie-slim` |
-| `s3`, `X.Y.Z-s3` | Amazon S3 / S3-compatible (MinIO, R2, …) | `debian:trixie-slim` |
-| `gcs`, `X.Y.Z-gcs` | Google Cloud Storage | `debian:trixie-slim` |
-| `azure`, `X.Y.Z-azure` | Azure Blob Storage | `debian:trixie-slim` |
+
+| Tag                                 | Backend                                  | Base                 |
+| ----------------------------------- | ---------------------------------------- | -------------------- |
+| `latest`, `fs`, `X.Y.Z`, `X.Y.Z-fs` | Local filesystem                         | `debian:trixie-slim` |
+| `s3`, `X.Y.Z-s3`                    | Amazon S3 / S3-compatible (MinIO, R2, …) | `debian:trixie-slim` |
+| `gcs`, `X.Y.Z-gcs`                  | Google Cloud Storage                     | `debian:trixie-slim` |
+| `azure`, `X.Y.Z-azure`              | Azure Blob Storage                       | `debian:trixie-slim` |
+
 
 All images are available from `docker.io/soundsystems/fileloft`.
 
@@ -23,12 +25,14 @@ All images are available from `docker.io/soundsystems/fileloft`.
 
 Every variant reads these environment variables:
 
-| Variable | Default | Description |
-| --- | --- | --- |
-| `FILELOFT_BIND` | `0.0.0.0:8080` | Address the HTTP server binds to. |
-| `FILELOFT_MAX_SIZE` | _unset_ (no limit) | Maximum allowed upload size, in bytes. |
-| `FILELOFT_BASE_PATH` | `/files/` | URL path the tus endpoints are mounted under. |
-| `RUST_LOG` | `info` | Tracing filter (e.g. `debug`, `fileloft_server=trace`). |
+
+| Variable             | Default            | Description                                             |
+| -------------------- | ------------------ | ------------------------------------------------------- |
+| `FILELOFT_BIND`      | `0.0.0.0:8080`     | Address the HTTP server binds to.                       |
+| `FILELOFT_MAX_SIZE`  | *unset* (no limit) | Maximum allowed upload size, in bytes.                  |
+| `FILELOFT_BASE_PATH` | `/files/`          | URL path the tus endpoints are mounted under.           |
+| `RUST_LOG`           | `info`             | Tracing filter (e.g. `debug`, `fileloft_server=trace`). |
+
 
 ### Production hardening
 
@@ -41,15 +45,15 @@ For production deployments:
 - Set `FILELOFT_MAX_SIZE` to the largest upload you intend to allow.
 - Set `FILELOFT_CORS_ALLOW_ORIGIN` to an explicit origin for browser clients.
 - Only enable `FILELOFT_BEHIND_PROXY` behind a trusted proxy that strips
-  client-supplied forwarded headers; prefer `FILELOFT_BASE_URL` for public URLs.
+client-supplied forwarded headers; prefer `FILELOFT_BASE_URL` for public URLs.
 - Terminate TLS at fileloft or at a trusted reverse proxy.
 - Disable termination or downloads when clients do not need those capabilities.
 - **Object storage (S3, GCS, Azure):** the server only coordinates a given
-  upload *inside* one process. If you run **multiple** replicas, use a
-  **shared per-upload lock** (or similar), or **sticky routing** on the
-  load balancer so all requests for the same upload go to the same
-  instance. Otherwise, two nodes could write the same upload at once and
-  corrupt the object.
+upload *inside* one process. If you run **multiple** replicas, use a
+**shared per-upload lock** (or similar), or **sticky routing** on the
+load balancer so all requests for the same upload go to the same
+instance. Otherwise, two nodes could write the same upload at once and
+corrupt the object.
 
 ---
 
@@ -65,9 +69,11 @@ docker run --rm \
 The server stores uploads under `/var/lib/fileloft`. Mount a volume or host
 path there to persist data across restarts.
 
-| Variable | Default | Description |
-| --- | --- | --- |
+
+| Variable            | Default             | Description                             |
+| ------------------- | ------------------- | --------------------------------------- |
 | `FILELOFT_DATA_DIR` | `/var/lib/fileloft` | Directory used by the filesystem store. |
+
 
 ---
 
@@ -86,13 +92,15 @@ docker run --rm \
 Authentication uses the standard AWS SDK credential chain: environment
 variables, `~/.aws/credentials`, IMDS, web identity, etc.
 
-| Variable | Default | Description |
-| --- | --- | --- |
-| `FILELOFT_S3_BUCKET` | _(required)_ | S3 bucket name. |
-| `FILELOFT_S3_PREFIX` | _empty_ | Object key prefix (e.g. `uploads/`). |
-| `FILELOFT_S3_ENDPOINT` | _unset_ | Custom endpoint for S3-compatible services (MinIO, R2). |
-| `FILELOFT_S3_REGION` | _from SDK config_ | Override the signing region. |
-| `FILELOFT_S3_FORCE_PATH_STYLE` | `false` | Set to `true` for path-style addressing (often needed for MinIO). |
+
+| Variable                       | Default           | Description                                                       |
+| ------------------------------ | ----------------- | ----------------------------------------------------------------- |
+| `FILELOFT_S3_BUCKET`           | *(required)*      | S3 bucket name.                                                   |
+| `FILELOFT_S3_PREFIX`           | *empty*           | Object key prefix (e.g. `uploads/`).                              |
+| `FILELOFT_S3_ENDPOINT`         | *unset*           | Custom endpoint for S3-compatible services (MinIO, R2).           |
+| `FILELOFT_S3_REGION`           | *from SDK config* | Override the signing region.                                      |
+| `FILELOFT_S3_FORCE_PATH_STYLE` | `false`           | Set to `true` for path-style addressing (often needed for MinIO). |
+
 
 Standard AWS SDK variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
 `AWS_REGION`, `AWS_PROFILE`, etc.) are also respected.
@@ -114,10 +122,12 @@ Authentication uses Application Default Credentials. On GCE/GKE the attached
 service account is used automatically. Outside Google Cloud, mount a service
 account key file and set `GOOGLE_APPLICATION_CREDENTIALS`.
 
-| Variable | Default | Description |
-| --- | --- | --- |
-| `FILELOFT_GCS_BUCKET` | _(required)_ | GCS bucket name. |
-| `FILELOFT_GCS_PREFIX` | _empty_ | Object name prefix (e.g. `uploads/`). |
+
+| Variable              | Default      | Description                           |
+| --------------------- | ------------ | ------------------------------------- |
+| `FILELOFT_GCS_BUCKET` | *(required)* | GCS bucket name.                      |
+| `FILELOFT_GCS_PREFIX` | *empty*      | Object name prefix (e.g. `uploads/`). |
+
 
 ---
 
@@ -134,17 +144,19 @@ docker run --rm \
 The Azure image supports two authentication modes:
 
 1. **Connection string** — set `FILELOFT_AZURE_CONNECTION_STRING` or
-   `AZURE_STORAGE_CONNECTION_STRING`.
+  `AZURE_STORAGE_CONNECTION_STRING`.
 2. **Default credential** — set `FILELOFT_AZURE_ACCOUNT` (or
-   `AZURE_STORAGE_ACCOUNT`) and let the Azure Identity SDK resolve credentials
+  `AZURE_STORAGE_ACCOUNT`) and let the Azure Identity SDK resolve credentials
    (managed identity, Azure CLI, environment variables).
 
-| Variable | Default | Description |
-| --- | --- | --- |
-| `FILELOFT_AZURE_CONTAINER` | _(required)_ | Blob container name. |
-| `FILELOFT_AZURE_PREFIX` | _empty_ | Blob name prefix (e.g. `uploads/`). |
-| `FILELOFT_AZURE_CONNECTION_STRING` | _unset_ | Azure Storage connection string (takes priority). |
-| `FILELOFT_AZURE_ACCOUNT` | _unset_ | Storage account name (used with default credentials). |
+
+| Variable                           | Default      | Description                                           |
+| ---------------------------------- | ------------ | ----------------------------------------------------- |
+| `FILELOFT_AZURE_CONTAINER`         | *(required)* | Blob container name.                                  |
+| `FILELOFT_AZURE_PREFIX`            | *empty*      | Blob name prefix (e.g. `uploads/`).                   |
+| `FILELOFT_AZURE_CONNECTION_STRING` | *unset*      | Azure Storage connection string (takes priority).     |
+| `FILELOFT_AZURE_ACCOUNT`           | *unset*      | Storage account name (used with default credentials). |
+
 
 ---
 
