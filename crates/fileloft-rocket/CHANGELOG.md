@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1](https://github.com/sound-systems/fileloft/compare/fileloft-rocket-v0.2.0...fileloft-rocket-v0.2.1) - 2026-04-25
+
+### Other
+
+- setup docker builds per supported environment ([#4](https://github.com/sound-systems/fileloft/pull/4))
+
 ## [0.2.0](https://github.com/sound-systems/fileloft/compare/fileloft-rocket-v0.1.0...fileloft-rocket-v0.2.0) - 2026-04-09
 
 ### Added
