@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 pub mod locker;
 pub mod store;
 

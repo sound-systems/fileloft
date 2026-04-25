@@ -30,6 +30,27 @@ Every variant reads these environment variables:
 | `FILELOFT_BASE_PATH` | `/files/` | URL path the tus endpoints are mounted under. |
 | `RUST_LOG` | `info` | Tracing filter (e.g. `debug`, `fileloft_server=trace`). |
 
+### Production hardening
+
+The standalone server does not include authentication or authorization. Put it
+behind an auth gateway, signed URL layer, or trusted private network boundary
+before exposing it to untrusted clients.
+
+For production deployments:
+
+- Set `FILELOFT_MAX_SIZE` to the largest upload you intend to allow.
+- Set `FILELOFT_CORS_ALLOW_ORIGIN` to an explicit origin for browser clients.
+- Only enable `FILELOFT_BEHIND_PROXY` behind a trusted proxy that strips
+  client-supplied forwarded headers; prefer `FILELOFT_BASE_URL` for public URLs.
+- Terminate TLS at fileloft or at a trusted reverse proxy.
+- Disable termination or downloads when clients do not need those capabilities.
+- **Object storage (S3, GCS, Azure):** the server only coordinates a given
+  upload *inside* one process. If you run **multiple** replicas, use a
+  **shared per-upload lock** (or similar), or **sticky routing** on the
+  load balancer so all requests for the same upload go to the same
+  instance. Otherwise, two nodes could write the same upload at once and
+  corrupt the object.
+
 ---
 
 ### Filesystem (default)

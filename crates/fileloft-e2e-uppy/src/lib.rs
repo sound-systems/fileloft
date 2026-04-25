@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! Axum + [`fileloft_axum::tus_router`] + [`fileloft_store_fs::FileStore`] with a vendored Uppy page.
 //!
 //! Uppy is bundled into `static/vendor/` by `npm run build` (see `package.json`) and embedded or

@@ -139,6 +139,15 @@ All variants share these common environment variables (see also [tusd-style conf
 | `FILELOFT_TLS_MODE` | `tls12` | Reserved for future Rustls cipher/protocol tuning (currently logs a warning if not `tls12`). |
 | `FILELOFT_ENABLE_H2C` | `false` | When `true`, logs that HTTP/2 is available (workspace `axum` is built with `http2`). |
 
+Production hardening:
+
+- The standalone server does not include authentication or authorization; put it behind an auth gateway, signed URL layer, or trusted network boundary.
+- Set `FILELOFT_MAX_SIZE` to the largest upload you intend to allow.
+- Use an explicit `FILELOFT_CORS_ALLOW_ORIGIN` for browser deployments, especially when credentials are involved.
+- Prefer `FILELOFT_BASE_URL` behind TLS offload; only enable `FILELOFT_BEHIND_PROXY` when a trusted proxy strips client-supplied forwarded headers.
+- Disable termination or downloads when clients do not need those capabilities.
+- **Object storage (S3, GCS, Azure):** chunk writes for a given upload are coordinated only *within one* server process. If you run more than one replica, use a **shared lock** (or similar) for uploads, or **sticky routing** on the load balancer so every request for the same upload hits the same instance.
+
 See the docs site for the full per-backend configuration reference.
 
 Quick health check with any tus 1.0.0 client:

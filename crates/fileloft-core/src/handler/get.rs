@@ -12,7 +12,7 @@ use super::TusHandler;
 
 pub(super) async fn handle<S, L>(
     h: &TusHandler<S, L>,
-    req: &TusRequest,
+    req: TusRequest,
 ) -> Result<TusResponse, TusError>
 where
     S: SendDataStore + Send + Sync + 'static,
@@ -22,11 +22,8 @@ where
         return Err(TusError::MethodNotAllowed);
     }
 
-    let id = req
-        .upload_id
-        .as_deref()
-        .ok_or(TusError::InvalidUploadId)?
-        .into();
+    let id =
+        crate::info::UploadId::parse(req.upload_id.as_deref().ok_or(TusError::InvalidUploadId)?)?;
 
     let _lock = if let Some(locker) = &h.locker {
         Some(

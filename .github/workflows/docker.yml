@@ -19,6 +19,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 env:
   IMAGE: docker.io/soundsystems/fileloft
@@ -87,3 +88,25 @@ jobs:
           cache-to: type=gha,mode=max,scope=fileloft-${{ matrix.backend }}
           provenance: true
           sbom: true
+
+      - name: Scan image
+        uses: aquasecurity/trivy-action@0.36.0
+        with:
+          image-ref: ${{ env.IMAGE }}:${{ matrix.backend }}
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+          ignore-unfixed: true
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v4
+
+      - name: Sign image tags
+        env:
+          COSIGN_YES: "true"
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          while IFS= read -r tag; do
+            [ -n "$tag" ] && cosign sign "$tag"
+          done <<EOF
+          $TAGS
+          EOF

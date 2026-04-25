@@ -13,7 +13,7 @@ use super::TusHandler;
 
 pub(super) async fn handle<S, L>(
     h: &TusHandler<S, L>,
-    req: &TusRequest,
+    req: TusRequest,
 ) -> Result<TusResponse, TusError>
 where
     S: SendDataStore + Send + Sync + 'static,
@@ -21,11 +21,8 @@ where
 {
     crate::util::check_tus_resumable(&req.headers)?;
 
-    let id = req
-        .upload_id
-        .as_deref()
-        .ok_or(TusError::InvalidUploadId)?
-        .into();
+    let id =
+        crate::info::UploadId::parse(req.upload_id.as_deref().ok_or(TusError::InvalidUploadId)?)?;
 
     let upload = h.store.get_upload(&id).await?;
     let info = upload.get_info().await?;

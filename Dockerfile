@@ -55,11 +55,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=builder /build/target/release/fileloft-server /usr/local/bin/fileloft-server
 
-RUN mkdir -p /var/lib/fileloft
+RUN groupadd --system fileloft \
+    && useradd --system --gid fileloft --home-dir /var/lib/fileloft --shell /usr/sbin/nologin fileloft \
+    && mkdir -p /var/lib/fileloft \
+    && chown -R fileloft:fileloft /var/lib/fileloft
 
 ENV FILELOFT_BIND=0.0.0.0:8080
 ENV FILELOFT_DATA_DIR=/var/lib/fileloft
 ENV FILELOFT_BASE_PATH=/files/
 
 EXPOSE 8080
+USER fileloft:fileloft
 ENTRYPOINT ["fileloft-server"]

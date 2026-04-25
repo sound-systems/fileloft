@@ -14,6 +14,8 @@ use rocket::route::{Handler, Outcome, Route};
 use rocket::tokio::io::AsyncReadExt;
 use rocket::Request;
 
+const DEFAULT_BODY_LIMIT_BYTES: u64 = 512 * 1024 * 1024;
+
 /// Mount with `rocket.mount("/files", tus_routes(handler))`.
 pub fn tus_routes<S, L>(handler: Arc<TusHandler<S, L>>) -> Vec<Route>
 where
@@ -82,14 +84,17 @@ where
     ) {
         None
     } else {
-        let mut stream = data.open(512.mebibytes());
+        let limit = match handler.max_size() {
+            0 => DEFAULT_BODY_LIMIT_BYTES,
+            n => n,
+        };
+        let mut stream = data.open(limit.bytes());
         let mut buf = Vec::new();
         stream
             .read_to_end(&mut buf)
             .await
             .map_err(|_| Status::InternalServerError)?;
-        let reader: Box<dyn tokio::io::AsyncRead + Send + Sync + Unpin> =
-            Box::new(Cursor::new(buf));
+        let reader: Box<dyn tokio::io::AsyncRead + Send + Unpin> = Box::new(Cursor::new(buf));
         Some(reader)
     };
 

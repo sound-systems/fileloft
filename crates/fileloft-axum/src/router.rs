@@ -1,10 +1,10 @@
-use std::io::Cursor;
+use std::io;
 use std::sync::Arc;
 
 use axum::{
     body::Body,
     extract::Path,
-    http::{Request, Response, StatusCode},
+    http::{Request, Response},
     routing::any,
     Router,
 };
@@ -13,8 +13,8 @@ use fileloft_core::{
     lock::SendLocker,
     store::SendDataStore,
 };
-use http_body_util::BodyExt;
-use tokio_util::io::ReaderStream;
+use futures_util::TryStreamExt;
+use tokio_util::io::{ReaderStream, StreamReader};
 
 /// Mount with [`Router::nest`], e.g. `.nest("/files", tus_router(handler))`.
 pub fn tus_router<S, L>(handler: Arc<TusHandler<S, L>>) -> Router
@@ -61,20 +61,15 @@ where
     ) {
         None
     } else {
-        match body.collect().await {
-            Ok(col) => {
-                let bytes = col.to_bytes();
-                let reader: Box<dyn tokio::io::AsyncRead + Send + Sync + Unpin> =
-                    Box::new(Cursor::new(bytes.to_vec()));
-                Some(reader)
-            }
-            Err(e) => {
-                return Response::builder()
-                    .status(StatusCode::INTERNAL_SERVER_ERROR)
-                    .body(Body::from(format!("failed to read request body: {e}")))
-                    .unwrap_or_else(|_| Response::new(Body::empty()));
-            }
-        }
+        let stream = TryStreamExt::map_err(body.into_data_stream(), |e| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("failed to read request body: {e}"),
+            )
+        });
+        let reader: Box<dyn tokio::io::AsyncRead + Send + Unpin> =
+            Box::new(StreamReader::new(stream));
+        Some(reader)
     };
 
     let tus_req = TusRequest {

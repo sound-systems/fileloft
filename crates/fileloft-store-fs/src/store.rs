@@ -70,6 +70,7 @@ impl SendDataStore for FileStore {
     type UploadType = FileUpload;
 
     async fn create_upload(&self, info: UploadInfo) -> Result<FileUpload, TusError> {
+        info.id.validate()?;
         let path = self.info_path(&info.id);
         if let Some(parent) = path.parent() {
             tokio::fs::create_dir_all(parent)
@@ -86,6 +87,7 @@ impl SendDataStore for FileStore {
     }
 
     async fn get_upload(&self, id: &UploadId) -> Result<FileUpload, TusError> {
+        id.validate()?;
         let path = self.info_path(id);
         if !tokio::fs::try_exists(&path).await.map_err(TusError::Io)? {
             return Err(TusError::NotFound(id.to_string()));

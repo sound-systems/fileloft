@@ -8,11 +8,31 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - name: cargo clippy
+        run: cargo clippy --workspace --all-targets -- -D unsafe_code
       - name: cargo test
         run: cargo test --workspace
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install cargo-deny
+        run: cargo install cargo-deny --locked
+      - name: Check Rust dependencies
+        run: cargo deny check advisories licenses sources bans
+      - name: Audit e2e npm dependencies
+        working-directory: crates/fileloft-e2e-uppy
+        run: npm audit --audit-level=moderate

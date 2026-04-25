@@ -15,8 +15,33 @@ impl UploadId {
         Self(uuid::Uuid::new_v4().to_string())
     }
 
+    pub fn parse(value: &str) -> Result<Self, TusError> {
+        Self::validate_str(value)?;
+        Ok(Self(value.to_string()))
+    }
+
     pub fn as_str(&self) -> &str {
         &self.0
+    }
+
+    pub fn validate(&self) -> Result<(), TusError> {
+        Self::validate_str(&self.0)
+    }
+
+    fn validate_str(value: &str) -> Result<(), TusError> {
+        if value.is_empty() || value.len() > 128 {
+            return Err(TusError::InvalidUploadId);
+        }
+        if value == "." || value == ".." {
+            return Err(TusError::InvalidUploadId);
+        }
+        if !value
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'-' | b'_' | b'.'))
+        {
+            return Err(TusError::InvalidUploadId);
+        }
+        Ok(())
     }
 }
 

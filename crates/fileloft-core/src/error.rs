@@ -90,6 +90,15 @@ pub enum TusError {
 }
 
 impl TusError {
+    pub fn client_message(&self) -> String {
+        match self {
+            Self::Io(_) | Self::Serialization(_) | Self::Internal(_) => {
+                "internal server error".to_string()
+            }
+            _ => self.to_string(),
+        }
+    }
+
     /// Maps each variant to the appropriate HTTP status code per the tus 1.0.x spec.
     pub fn status_code(&self) -> StatusCode {
         match self {

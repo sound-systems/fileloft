@@ -105,6 +105,7 @@ where
     if let Some(cb) = &h.config.hooks.pre_create {
         let changes = cb(info.clone()).await?;
         if let Some(new_id) = changes.id {
+            new_id.validate()?;
             info.id = new_id;
         }
         if let Some(new_meta) = changes.metadata {
@@ -231,7 +232,7 @@ fn extract_upload_id_from_url(url: &str, base_path: &str) -> Result<UploadId, Tu
         let after = &path[pos + base.len()..];
         let id = after.trim_start_matches('/');
         if !id.is_empty() {
-            return Ok(UploadId::from(id));
+            return UploadId::parse(id);
         }
     }
     // Fallback: last path segment
@@ -239,7 +240,7 @@ fn extract_upload_id_from_url(url: &str, base_path: &str) -> Result<UploadId, Tu
     if id.is_empty() {
         return Err(TusError::InvalidUploadId);
     }
-    Ok(UploadId::from(id))
+    UploadId::parse(id)
 }
 
 async fn fetch_partial_infos<S, L>(

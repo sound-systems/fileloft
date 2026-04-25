@@ -13,7 +13,7 @@ use super::TusHandler;
 
 pub(super) async fn handle<S, L>(
     h: &TusHandler<S, L>,
-    req: &TusRequest,
+    req: TusRequest,
 ) -> Result<TusResponse, TusError>
 where
     S: SendDataStore + Send + Sync + 'static,
@@ -25,11 +25,8 @@ where
         return Err(TusError::ExtensionNotEnabled("termination"));
     }
 
-    let id = req
-        .upload_id
-        .as_deref()
-        .ok_or(TusError::InvalidUploadId)?
-        .into();
+    let id =
+        crate::info::UploadId::parse(req.upload_id.as_deref().ok_or(TusError::InvalidUploadId)?)?;
 
     // pre_terminate hook
     if let Some(cb) = &h.config.hooks.pre_terminate {

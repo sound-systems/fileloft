@@ -5,3 +5,14 @@ target/
 docs-site/
 crates/fileloft-e2e-uppy/static/vendor/
 *.md
+.env
+.env.*
+**/.env
+**/.env.*
+**/.cargo/credentials
+**/.cargo/credentials.toml
+**/credentials.json
+**/*credentials*.json
+**/*service-account*.json
+**/*.pem
+**/*.key

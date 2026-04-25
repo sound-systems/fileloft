@@ -1,5 +1,11 @@
 #![forbid(unsafe_code)]
 
+#[cfg(any(
+    feature = "backend-s3",
+    feature = "backend-gcs",
+    feature = "backend-azure"
+))]
+use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
@@ -7,12 +13,6 @@ use std::time::Duration;
 use axum::Router;
 use fileloft_axum::tus_router;
 use fileloft_core::config::{Config, CorsConfig, Extensions};
-#[cfg(any(
-    feature = "backend-s3",
-    feature = "backend-gcs",
-    feature = "backend-azure"
-))]
-use fileloft_core::handler::NoLocker;
 use fileloft_core::handler::TusHandler;
 
 // Exactly one backend feature must be enabled.
@@ -118,6 +118,27 @@ fn build_config() -> Result<Config, Box<dyn std::error::Error + Send + Sync>> {
             .unwrap_or(86400),
     };
 
+    if max_size == 0 {
+        tracing::warn!(
+            "FILELOFT_MAX_SIZE is unset or zero; uploads are not capped by the standalone server"
+        );
+    }
+    if cors.enabled && cors.allow_origin == "*" {
+        tracing::warn!(
+            "CORS allows all origins; set FILELOFT_CORS_ALLOW_ORIGIN explicitly for production browser deployments"
+        );
+    }
+    if cors.enabled && cors.allow_credentials && cors.allow_origin == "*" {
+        tracing::warn!(
+            "FILELOFT_CORS_ALLOW_CREDENTIALS=true with wildcard origin is invalid for browsers; use an explicit origin"
+        );
+    }
+    if env_truthy("FILELOFT_BEHIND_PROXY") && env_opt("FILELOFT_BASE_URL").is_none() {
+        tracing::warn!(
+            "trusting X-Forwarded-* headers; ensure a trusted proxy strips client-supplied forwarded headers or set FILELOFT_BASE_URL"
+        );
+    }
+
     if env_truthy("FILELOFT_ENABLE_H2C") {
         tracing::info!(
             "FILELOFT_ENABLE_H2C: HTTP/2 cleartext is available; axum is built with the http2 feature"
@@ -174,6 +195,73 @@ where
     Router::new().nest(base_path, tus_router(handler))
 }
 
+#[cfg(any(
+    feature = "backend-s3",
+    feature = "backend-gcs",
+    feature = "backend-azure"
+))]
+#[derive(Clone, Default)]
+struct ProcessLocker {
+    locks: Arc<tokio::sync::Mutex<HashMap<String, Arc<tokio::sync::Mutex<()>>>>>,
+}
+
+#[cfg(any(
+    feature = "backend-s3",
+    feature = "backend-gcs",
+    feature = "backend-azure"
+))]
+struct ProcessLock {
+    _guard: tokio::sync::OwnedMutexGuard<()>,
+}
+
+#[cfg(any(
+    feature = "backend-s3",
+    feature = "backend-gcs",
+    feature = "backend-azure"
+))]
+impl fileloft_core::lock::SendLock for ProcessLock {
+    async fn release(self) -> Result<(), fileloft_core::TusError> {
+        Ok(())
+    }
+}
+
+#[cfg(any(
+    feature = "backend-s3",
+    feature = "backend-gcs",
+    feature = "backend-azure"
+))]
+impl fileloft_core::lock::SendLocker for ProcessLocker {
+    type LockType = ProcessLock;
+
+    async fn acquire(
+        &self,
+        id: &fileloft_core::info::UploadId,
+    ) -> Result<Self::LockType, fileloft_core::TusError> {
+        let lock = {
+            let mut locks = self.locks.lock().await;
+            locks
+                .entry(id.to_string())
+                .or_insert_with(|| Arc::new(tokio::sync::Mutex::new(())))
+                .clone()
+        };
+        Ok(ProcessLock {
+            _guard: lock.lock_owned().await,
+        })
+    }
+}
+
+#[cfg(any(
+    feature = "backend-s3",
+    feature = "backend-gcs",
+    feature = "backend-azure"
+))]
+fn cloud_locker() -> ProcessLocker {
+    tracing::warn!(
+        "using per-process upload locks for object storage backend; multi-replica deployments still need external per-upload serialization"
+    );
+    ProcessLocker::default()
+}
+
 // ---------------------------------------------------------------------------
 // Filesystem backend
 // ---------------------------------------------------------------------------
@@ -226,8 +314,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let store = builder.build().await?;
     let config = build_config()?;
-    let handler: Arc<TusHandler<S3Store, NoLocker>> =
-        Arc::new(TusHandler::new(store, None, config.clone()));
+    let handler = Arc::new(TusHandler::new(store, Some(cloud_locker()), config.clone()));
 
     tracing::info!(backend = "s3", bucket, "storage configured");
     serve(handler, config).await
@@ -251,8 +338,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let store = builder.build().await?;
     let config = build_config()?;
-    let handler: Arc<TusHandler<GcsStore, NoLocker>> =
-        Arc::new(TusHandler::new(store, None, config.clone()));
+    let handler = Arc::new(TusHandler::new(store, Some(cloud_locker()), config.clone()));
 
     tracing::info!(backend = "gcs", bucket, "storage configured");
     serve(handler, config).await
@@ -282,8 +368,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let store = builder.build().await?;
     let config = build_config()?;
-    let handler: Arc<TusHandler<AzureStore, NoLocker>> =
-        Arc::new(TusHandler::new(store, None, config.clone()));
+    let handler = Arc::new(TusHandler::new(store, Some(cloud_locker()), config.clone()));
 
     tracing::info!(backend = "azure", container, "storage configured");
     serve(handler, config).await

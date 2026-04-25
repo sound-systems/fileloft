@@ -37,6 +37,7 @@ impl SendLocker for FileLocker {
     type LockType = FileLock;
 
     async fn acquire(&self, id: &UploadId) -> Result<FileLock, TusError> {
+        id.validate()?;
         tokio::fs::create_dir_all(&self.lock_dir)
             .await
             .map_err(TusError::Io)?;

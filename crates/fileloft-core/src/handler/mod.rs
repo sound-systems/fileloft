@@ -49,7 +49,7 @@ pub struct TusRequest {
     pub upload_id: Option<String>,
     pub headers: HeaderMap,
     /// Streaming body. `None` for HEAD / DELETE / OPTIONS / GET.
-    pub body: Option<Box<dyn tokio::io::AsyncRead + Send + Sync + Unpin>>,
+    pub body: Option<Box<dyn tokio::io::AsyncRead + Send + Unpin>>,
 }
 
 /// Outgoing response produced by the tus handler.
@@ -110,15 +110,20 @@ where
         self.hook_tx.as_ref().map(|tx| tx.subscribe())
     }
 
+    /// Maximum declared upload size in bytes. `0` means no core-level limit.
+    pub fn max_size(&self) -> u64 {
+        self.config.max_size
+    }
+
     /// Main dispatch — routes to the appropriate sub-handler.
     pub async fn handle(&self, req: TusRequest) -> TusResponse {
         let result = match req.method {
-            Method::OPTIONS => options::handle(self, &req).await,
-            Method::HEAD => head::handle(self, &req).await,
-            Method::GET => get::handle(self, &req).await,
+            Method::OPTIONS => options::handle(self, req).await,
+            Method::HEAD => head::handle(self, req).await,
+            Method::GET => get::handle(self, req).await,
             Method::POST => post::handle(self, req).await,
             Method::PATCH => patch::handle(self, req).await,
-            Method::DELETE => delete::handle(self, &req).await,
+            Method::DELETE => delete::handle(self, req).await,
             _ => Err(TusError::MethodNotAllowed),
         };
         match result {
@@ -155,7 +160,10 @@ where
     /// Build an error response from a `TusError`.
     pub(crate) fn error_response(&self, err: TusError) -> TusResponse {
         let status = err.status_code();
-        let body = Bytes::from(err.to_string());
+        if status.is_server_error() {
+            tracing::error!(error = %err, "internal tus handler error");
+        }
+        let body = Bytes::from(err.client_message());
         let mut headers = self.base_headers();
         headers.insert(
             http::header::CONTENT_TYPE,

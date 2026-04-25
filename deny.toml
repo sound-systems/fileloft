@@ -1,0 +1,39 @@
+[advisories]
+version = 2
+yanked = "warn"
+ignore = [
+    # Transitive through Azure SDK async/http stack; no direct safe upgrade is available.
+    "RUSTSEC-2024-0384",
+    "RUSTSEC-2024-0436",
+    # Transitive through AWS SDK's rustls 0.21 stack. Newer rustls-webpki 0.103.x
+    # is updated in Cargo.lock; keep these ignores scoped for the older SDK path.
+    "RUSTSEC-2026-0098",
+    "RUSTSEC-2026-0099",
+    "RUSTSEC-2026-0104",
+]
+
+[licenses]
+version = 2
+confidence-threshold = 0.8
+allow = [
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "CC0-1.0",
+    "CDLA-Permissive-2.0",
+    "ISC",
+    "MIT",
+    "MPL-2.0",
+    "OpenSSL",
+    "Unicode-3.0",
+    "Zlib",
+]
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

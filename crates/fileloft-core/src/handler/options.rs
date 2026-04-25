@@ -13,7 +13,7 @@ use super::TusHandler;
 
 pub(super) async fn handle<S, L>(
     h: &TusHandler<S, L>,
-    _req: &TusRequest,
+    _req: TusRequest,
 ) -> Result<TusResponse, TusError>
 where
     S: SendDataStore + Send + Sync + 'static,

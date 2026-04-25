@@ -39,11 +39,8 @@ where
 
     let client_offset = parse_upload_offset(&req.headers)?;
 
-    let id = req
-        .upload_id
-        .as_deref()
-        .ok_or(TusError::InvalidUploadId)?
-        .into();
+    let id =
+        crate::info::UploadId::parse(req.upload_id.as_deref().ok_or(TusError::InvalidUploadId)?)?;
 
     // Acquire lock
     let _lock = if let Some(locker) = &h.locker {
