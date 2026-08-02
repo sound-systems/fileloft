@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0](https://github.com/sound-systems/fileloft/compare/fileloft-store-fs-v0.3.0...fileloft-store-fs-v0.4.0) - 2026-08-02
+
+### Fixed
+
+- *(security)* reject upload IDs that collide with backend object keys ([#8](https://github.com/sound-systems/fileloft/pull/8))
+
 ## [0.3.0](https://github.com/sound-systems/fileloft/compare/fileloft-store-fs-v0.2.1...fileloft-store-fs-v0.3.0) - 2026-04-25
 
 ### Fixed

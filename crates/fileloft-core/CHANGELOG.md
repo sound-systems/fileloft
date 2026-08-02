@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0](https://github.com/sound-systems/fileloft/compare/fileloft-core-v0.3.0...fileloft-core-v0.4.0) - 2026-08-02
+
+### Fixed
+
+- fire pre_terminate hook and event when cleaning up concat partials ([#13](https://github.com/sound-systems/fileloft/pull/13))
+- verify Upload-Checksum before committing the chunk ([#12](https://github.com/sound-systems/fileloft/pull/12))
+- honor upload expiry on GET downloads ([#11](https://github.com/sound-systems/fileloft/pull/11))
+- *(security)* only allow partial uploads as concatenation sources ([#9](https://github.com/sound-systems/fileloft/pull/9))
+- *(security)* reject upload IDs that collide with backend object keys ([#8](https://github.com/sound-systems/fileloft/pull/8))
+
 ## [0.3.0](https://github.com/sound-systems/fileloft/compare/fileloft-core-v0.2.1...fileloft-core-v0.3.0) - 2026-04-25
 
 ### Fixed
