@@ -106,14 +106,18 @@ where
         .body
         .ok_or_else(|| TusError::Internal("PATCH missing body".into()))?;
 
-    // Write chunk — with or without checksum wrapping
+    // Write chunk — with or without checksum wrapping.
     let _bytes_written = if let Some((algorithm, expected_hash)) = checksum {
+        // Verify the checksum BEFORE persisting anything. Read the whole chunk
+        // through the hasher, check it, and only then write. On a mismatch the
+        // store is never touched, so the upload offset is left unchanged and the
+        // client can safely retry the same chunk.
         let mut checksum_reader = ChecksumReader::new(body, algorithm, expected_hash);
-        let n = upload
-            .write_chunk(client_offset, &mut checksum_reader)
-            .await?;
+        let mut buf = Vec::new();
+        tokio::io::AsyncReadExt::read_to_end(&mut checksum_reader, &mut buf).await?;
         checksum_reader.verify()?;
-        n
+        let mut cursor = std::io::Cursor::new(buf);
+        upload.write_chunk(client_offset, &mut cursor).await?
     } else {
         let mut body = body;
         upload.write_chunk(client_offset, body.as_mut()).await?
