@@ -101,6 +101,55 @@ async fn patch_on_final_upload_returns_403() {
 }
 
 #[tokio::test]
+async fn final_concat_rejects_non_partial_source() {
+    let h = make_concat_handler();
+
+    // A normal, completed upload that was never declared as a partial.
+    let mut headers = tus_headers();
+    headers.insert(HDR_UPLOAD_LENGTH, "6".parse().unwrap());
+    headers.insert("host", "localhost".parse().unwrap());
+    let post = h
+        .handle(TusRequest {
+            method: http::Method::POST,
+            uri: "/files/".parse().unwrap(),
+            upload_id: None,
+            headers,
+            body: None,
+        })
+        .await;
+    assert_eq!(post.status.as_u16(), 201);
+    let victim_id = id_from_response(&post);
+    let patch = h
+        .handle(patch_req(
+            &victim_id,
+            0,
+            bytes::Bytes::from_static(b"secret"),
+        ))
+        .await;
+    assert_eq!(patch.status.as_u16(), 204);
+
+    // Referencing that non-partial upload as a concatenation source must fail.
+    let concat_value = format!("final;http://localhost/files/{victim_id}");
+    let mut headers2 = tus_headers();
+    headers2.insert(HDR_UPLOAD_CONCAT, concat_value.parse().unwrap());
+    headers2.insert("host", "localhost".parse().unwrap());
+    let resp = h
+        .handle(TusRequest {
+            method: http::Method::POST,
+            uri: "/files/".parse().unwrap(),
+            upload_id: None,
+            headers: headers2,
+            body: None,
+        })
+        .await;
+    assert_eq!(
+        resp.status.as_u16(),
+        400,
+        "non-partial upload must not be usable as a concatenation source"
+    );
+}
+
+#[tokio::test]
 async fn final_concat_with_incomplete_partial_returns_400() {
     let h = make_concat_handler();
 
