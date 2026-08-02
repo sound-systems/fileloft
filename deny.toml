@@ -10,6 +10,13 @@ ignore = [
     "RUSTSEC-2026-0098",
     "RUSTSEC-2026-0099",
     "RUSTSEC-2026-0104",
+    # Transitive through the Azure SDK (azure_core 0.21) http/XML stack. All are
+    # DoS/unmaintained advisories with no server-triggerable path in fileloft,
+    # and azure_core 0.21 pins http-types 2.x and quick-xml 0.31 with no
+    # semver-compatible upgrade available.
+    "RUSTSEC-2026-0174", # http-types unmaintained
+    "RUSTSEC-2026-0194", # quick-xml quadratic parse (DoS)
+    "RUSTSEC-2026-0195", # quick-xml namespace allocation (DoS)
 ]
 
 [licenses]
