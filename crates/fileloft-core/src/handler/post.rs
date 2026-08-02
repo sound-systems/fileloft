@@ -255,6 +255,12 @@ where
     for id in ids {
         let upload = h.store.get_upload(id).await?;
         let info = upload.get_info().await?;
+        // A final concatenation may only draw from uploads that were explicitly
+        // created as partials. Without this, any completed upload whose ID is
+        // known could be copied into (and cleaned up via) a concatenation.
+        if !info.is_partial {
+            return Err(TusError::NotPartialUpload(id.to_string()));
+        }
         if !info.is_complete() {
             return Err(TusError::PartialUploadIncomplete(id.to_string()));
         }

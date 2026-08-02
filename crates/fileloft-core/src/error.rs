@@ -58,6 +58,9 @@ pub enum TusError {
     #[error("partial upload {0} is not yet complete")]
     PartialUploadIncomplete(String),
 
+    #[error("upload {0} is not a partial upload and cannot be used in a concatenation")]
+    NotPartialUpload(String),
+
     #[error("PATCH is not allowed on a final concatenated upload")]
     PatchOnFinalUpload,
 
@@ -124,6 +127,7 @@ impl TusError {
             Self::InvalidUploadId => StatusCode::BAD_REQUEST,
             Self::EmptyConcatenation => StatusCode::BAD_REQUEST,
             Self::PartialUploadIncomplete(_) => StatusCode::BAD_REQUEST,
+            Self::NotPartialUpload(_) => StatusCode::BAD_REQUEST,
             Self::PatchOnFinalUpload => StatusCode::FORBIDDEN,
             Self::UploadNotReadyForDownload => StatusCode::BAD_REQUEST,
             Self::MethodNotAllowed => StatusCode::METHOD_NOT_ALLOWED,
@@ -180,6 +184,7 @@ mod tests {
             (TusError::InvalidUploadId, 400),
             (TusError::EmptyConcatenation, 400),
             (TusError::PartialUploadIncomplete("id1".into()), 400),
+            (TusError::NotPartialUpload("id1".into()), 400),
             (TusError::PatchOnFinalUpload, 403),
             (TusError::UploadNotReadyForDownload, 400),
             (TusError::MethodNotAllowed, 405),
