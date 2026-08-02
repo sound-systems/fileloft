@@ -32,7 +32,7 @@ impl UploadId {
         if value.is_empty() || value.len() > 128 {
             return Err(TusError::InvalidUploadId);
         }
-        if value == "." || value == ".." {
+        if value == "." || value == ".." || value.contains("..") {
             return Err(TusError::InvalidUploadId);
         }
         if !value
@@ -41,8 +41,31 @@ impl UploadId {
         {
             return Err(TusError::InvalidUploadId);
         }
+        // Reject IDs that would collide with a storage backend's own object
+        // keys — e.g. `{id}.info`, `{id}_part_{n}`, `{id}_tmp_{n}`. Otherwise a
+        // caller-chosen ID could alias another upload's metadata or chunk files.
+        if collides_with_reserved_key(value) {
+            return Err(TusError::InvalidUploadId);
+        }
         Ok(())
     }
+}
+
+/// True when `value` matches the shape of a storage backend's derived object
+/// keys, so that no upload ID can be chosen to overlap another upload's files.
+fn collides_with_reserved_key(value: &str) -> bool {
+    if value.ends_with(".info") {
+        return true;
+    }
+    for token in ["_part_", "_tmp_"] {
+        if let Some(pos) = value.rfind(token) {
+            let tail = &value[pos + token.len()..];
+            if !tail.is_empty() && tail.bytes().all(|b| b.is_ascii_digit()) {
+                return true;
+            }
+        }
+    }
+    false
 }
 
 impl Default for UploadId {
@@ -240,5 +263,28 @@ mod tests {
     fn upload_info_deferred_never_complete_until_size_set() {
         let info = UploadInfo::new(UploadId::new(), None);
         assert!(!info.is_complete());
+    }
+
+    #[test]
+    fn upload_id_accepts_generated_and_ordinary_ids() {
+        // A freshly generated (UUID) ID always validates.
+        assert!(UploadId::new().validate().is_ok());
+        // Human-friendly IDs a pre_create hook might produce.
+        for id in ["my-file", "chapter_part_two", "report_part_2.pdf", "a.b.c"] {
+            assert!(UploadId::parse(id).is_ok(), "should accept: {id:?}");
+        }
+    }
+
+    #[test]
+    fn upload_id_rejects_traversal_and_reserved_key_collisions() {
+        for id in [
+            "a..b",          // path traversal fragment
+            "victim.info",   // aliases another upload's metadata file
+            "victim_part_0", // aliases another upload's chunk file
+            "victim_tmp_3",  // aliases another upload's temp file
+            "uploads/victim_part_1",
+        ] {
+            assert!(UploadId::parse(id).is_err(), "should reject: {id:?}");
+        }
     }
 }

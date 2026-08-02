@@ -333,6 +333,10 @@ impl SendUpload for FileUpload {
             .map_err(TusError::Io)?;
 
         for partial in partials {
+            // The ID here comes from the partial's stored `.info` record, not
+            // from the validated request path, so re-validate before using it
+            // to build a filesystem path.
+            partial.id.validate()?;
             let src_path = self.partial_data_path(&partial.id);
             let mut src = tokio::fs::File::open(&src_path)
                 .await
@@ -472,6 +476,24 @@ mod tests {
         assert_eq!(meta.offset, 4);
         assert_eq!(meta.size, Some(4));
         assert!(meta.is_final);
+    }
+
+    #[tokio::test]
+    async fn concatenate_rejects_traversal_in_partial_id() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let store = FileStore::new(dir.path());
+
+        let mut fin = store
+            .create_upload(info_with_id("final", None))
+            .await
+            .expect("final");
+
+        // A poisoned partial info carrying a path-traversal ID must not be
+        // turned into a filesystem path.
+        let mut evil = info_with_id("../../etc/passwd", Some(1));
+        evil.offset = 1;
+        let err = fin.concatenate(&[evil]).await.expect_err("must reject");
+        assert!(matches!(err, TusError::InvalidUploadId));
     }
 
     #[tokio::test]
