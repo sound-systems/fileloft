@@ -38,6 +38,14 @@ where
     let upload = h.store.get_upload(&id).await?;
     let info = upload.get_info().await?;
 
+    // Honor expiry consistently with HEAD and PATCH: an expired upload must not
+    // remain downloadable just because GET skipped the check.
+    if let Some(expires_at) = info.expires_at {
+        if chrono::Utc::now() > expires_at {
+            return Err(TusError::Gone);
+        }
+    }
+
     if !info.is_complete() {
         return Err(TusError::UploadNotReadyForDownload);
     }
