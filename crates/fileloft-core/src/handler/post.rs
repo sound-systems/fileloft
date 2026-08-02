@@ -153,11 +153,21 @@ where
     }
 
     // Optional: remove partial uploads after a successful final concatenation.
+    // Route each removal through the same pre_terminate hook and
+    // UploadTerminated event as an explicit DELETE, so termination policy and
+    // audit consumers observe these deletions too.
     if is_final && h.config.extensions.concatenation && h.config.extensions.cleanup_concat_partials
     {
         for partial_id in &final_info.partial_uploads {
             let u = h.store.get_upload(partial_id).await?;
+            if let Some(cb) = &h.config.hooks.pre_terminate {
+                let partial_info = u.get_info().await?;
+                cb(partial_info).await?;
+            }
             u.delete().await?;
+            h.emit(HookEvent::UploadTerminated {
+                id: partial_id.clone(),
+            });
         }
         final_info = upload.get_info().await?;
     }
